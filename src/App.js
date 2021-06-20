@@ -1,20 +1,35 @@
-import SceneManager from './Components/SceneManager/SceneManager';
-import NotesGenerator from './Components/Audio/Audio'
+import SceneManager from './SceneManager.js';
+import NotesGenerator from './Helpers/Audio/Audio.js'
 
 const canvas = document.querySelector( '#webgl' )
 
-var sceneManager = new SceneManager( canvas );
+const sceneManager = new SceneManager( canvas )
+bindEventListensers( )
+render( )
 
-function render( time )
+
+function bindEventListensers( )
+{
+    window.onresize = resizeCanvas;
+    resizeCanvas( )
+}
+
+function resizeCanvas( )
+{
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    sceneManager.onWindowResize( );
+}
+
+function render( )
 {
     requestAnimationFrame( render );
     sceneManager.update( );
 }
-
-render( )
-
-function resizeCanvas( ) { sceneManager ? sceneManager.onWindowResize : null }
-
 
 
 function TuneGenerator( )
