@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+// TODO import box from objects/box
+
 
 const sizes = { width: window.innerWidth, height: window.innerHeight };
 
@@ -14,6 +16,8 @@ export default function SceneManager( canvas )
     const camera = buildCamera( sizes.width, sizes.height );
     const light = buildLights( scene );
     const controls = new OrbitControls( camera, canvas )
+    const sceneSubjects = [ ];
+    // TODO: sceneSubjects.push(box) 
 
 
     function buildRender( width, height )
@@ -22,6 +26,10 @@ export default function SceneManager( canvas )
         let DPR = Math.min( window.devicePixelRatio, 2 );
         renderer.setPixelRatio( DPR );
         renderer.setSize( width, height );
+
+        renderer.gammaInput = true
+        renderer.gammaOutput = true;
+
         return renderer;
     }
 
@@ -52,6 +60,10 @@ export default function SceneManager( canvas )
 
     this.update = function( )
     {
+
+        //TODO: for (const i of scene.objects) {
+        //     sceneSubjects[i].update(clock.getElapsedTime())
+        // }
         controls.update( )
         renderer.render( scene, camera );
     }

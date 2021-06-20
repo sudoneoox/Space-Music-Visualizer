@@ -37165,6 +37165,7 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+// TODO import box from objects/box
 var sizes = {
   width: window.innerWidth,
   height: window.innerHeight
@@ -37179,6 +37180,7 @@ function SceneManager(canvas) {
   var camera = buildCamera(sizes.width, sizes.height);
   var light = buildLights(scene);
   var controls = new _OrbitControls.OrbitControls(camera, canvas);
+  var sceneSubjects = []; // TODO: sceneSubjects.push(box) 
 
   function buildRender(width, height) {
     var renderer = new THREE.WebGLRenderer({
@@ -37189,6 +37191,8 @@ function SceneManager(canvas) {
     var DPR = Math.min(window.devicePixelRatio, 2);
     renderer.setPixelRatio(DPR);
     renderer.setSize(width, height);
+    renderer.gammaInput = true;
+    renderer.gammaOutput = true;
     return renderer;
   }
 
@@ -37211,6 +37215,9 @@ function SceneManager(canvas) {
   }
 
   this.update = function () {
+    //TODO: for (const i of scene.objects) {
+    //     sceneSubjects[i].update(clock.getElapsedTime())
+    // }
     controls.update();
     renderer.render(scene, camera);
   };
