@@ -1,6 +1,11 @@
 import GeneralLights from "./Subjects/GeneralLights";
 import SceneSubject from "./Subjects/SceneSubject";
+import Terrain from "./Subjects/PolyTerrain";
+import Sun from './Subjects/Sun'
+
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as THREE from 'three'
+import Stats from "stats.js";
 
 export default function SceneManager( canvas )
 {
@@ -15,7 +20,10 @@ export default function SceneManager( canvas )
     const scene = buildScene( );
     const renderer = buildRender( screenDimensions );
     const camera = buildCamera( screenDimensions );
+    const controls = new OrbitControls( camera, canvas )
     const sceneSubjects = createSceneSubjects( scene );
+    const stats = new Stats( );
+    document.body.appendChild( stats.dom )
 
     function buildScene( )
     {
@@ -39,9 +47,10 @@ export default function SceneManager( canvas )
     {
         const aspectRatio = width / height;
         const fieldOfView = 60;
-        const nearPlane = 1;
-        const farPlane = 100;
+        const nearPlane = .01;
+        const farPlane = 1000;
         const camera = new THREE.PerspectiveCamera( fieldOfView, aspectRatio, nearPlane, farPlane );
+        camera.position.set( 0, 40, 10 )
 
         return camera;
     }
@@ -50,7 +59,9 @@ export default function SceneManager( canvas )
     {
         const sceneSubjects = [
             new GeneralLights( scene ),
-            new SceneSubject( scene )
+            new SceneSubject( scene ),
+            new Terrain( scene ),
+            // new Sun( scene )
         ];
 
         return sceneSubjects;
@@ -58,12 +69,15 @@ export default function SceneManager( canvas )
 
     this.update = function( )
     {
+        stats.begin( );
         const elapsedTime = clock.getElapsedTime( );
 
         for ( let i = 0; i < sceneSubjects.length; i++ )
             sceneSubjects[ i ].update( elapsedTime );
 
+        controls.update( )
         renderer.render( scene, camera );
+        stats.end( )
     }
 
     this.onWindowResize = function( )

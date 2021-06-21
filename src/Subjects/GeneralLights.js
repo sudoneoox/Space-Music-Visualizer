@@ -1,14 +1,17 @@
-import { PointLight } from "three";
+import { PointLight, AmbientLight } from "three";
 
 export default function GeneralLights( scene )
 {
-
-    const light = new PointLight( "#2222ff", 1 );
-    scene.add( light );
+    // color 2222ff
+    const pointLight = new PointLight( "#ffffff", 1 );
+    pointLight.position.set( 0, 40, 0 )
+    const ambientLight = new AmbientLight( '#ffffff', .1 )
+    scene.add( ambientLight )
+    scene.add( pointLight );
 
     this.update = function( time )
     {
-        light.intensity = ( Math.sin( time ) + 1.5 ) / 1.5;
-        light.color.setHSL( Math.sin( time ), 0.5, 0.5 );
+        pointLight.intensity = ( Math.sin( time ) + 1.5 ) / 1.5;
+        pointLight.color.setHSL( Math.sin( time ), 0.5, 0.5 );
     }
 }

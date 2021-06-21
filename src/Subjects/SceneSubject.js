@@ -6,7 +6,7 @@ export default function SceneSubject( scene )
     const radius = 2;
     const mesh = new THREE.Mesh( new THREE.IcosahedronBufferGeometry( radius, 2 ), new THREE.MeshStandardMaterial( { flatShading: true } ) );
 
-    mesh.position.set( 0, 0, -20 );
+    mesh.position.set( 0, 0, 0 );
 
     scene.add( mesh );
 

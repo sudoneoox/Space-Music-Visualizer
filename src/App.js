@@ -1,5 +1,5 @@
 import SceneManager from './SceneManager.js';
-import NotesGenerator from './Helpers/Audio/Audio.js'
+
 
 const canvas = document.querySelector( '#webgl' )
 
@@ -30,19 +30,3 @@ function render( )
     requestAnimationFrame( render );
     sceneManager.update( );
 }
-
-
-function TuneGenerator( )
-{
-    const notesGenerator = new NotesGenerator( );
-    setInterval( function( )
-    {
-        notesGenerator.playNote( 3 );
-    }, 800 );
-
-    setInterval( function( )
-    {
-        notesGenerator.playNote( 0 );
-    }, 4200 );
-}
-TuneGenerator( );
