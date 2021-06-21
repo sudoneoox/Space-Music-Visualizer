@@ -61,7 +61,7 @@ export default function SceneManager( canvas )
             new GeneralLights( scene ),
             new SceneSubject( scene ),
             new Terrain( scene ),
-            // new Sun( scene )
+            new Sun( scene )
         ];
 
         return sceneSubjects;

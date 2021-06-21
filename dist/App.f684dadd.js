@@ -36872,10 +36872,10 @@ function Terrain(scene) {
 }
 },{"simplex-noise":"node_modules/simplex-noise/simplex-noise.js","three":"node_modules/three/build/three.module.js"}],"src/assets/song.mp3":[function(require,module,exports) {
 module.exports = "/song.6842c2fc.mp3";
-},{}],"src/assets/shaders/songVertex.glsl":[function(require,module,exports) {
+},{}],"src/assets/libs/shaders/songVertex.glsl":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying float vNoise;\nuniform int numOctaves;\nuniform float time;\nuniform float noiseStrength;\nuniform float audioScale;\nconst int aLargeNumber = 10;\n\nfloat generateNoise(int x, int y, int z, int numOctave) {\n  if(numOctave == 0) {\n    return fract(sin(dot(vec3(x, y, z), vec3(12.9898, 78.23, 107.81))) * 43758.5453);\n  } else if(numOctave == 1) {\n    return fract(sin(dot(vec3(z, x, y), vec3(16.363, 43.597, 199.73))) * 69484.7539);\n  } else if(numOctave == 2) {\n    return fract(sin(dot(vec3(y, x, z), vec3(13.0, 68.819, 90.989))) * 92041.9823);\n  } else if(numOctave == 3) {\n    return fract(sin(dot(vec3(x, y, z), vec3(98.1577, 47.45029, 154.85161))) * 84499.0);\n  } else if(numOctave == 4) {\n    return fract(sin(dot(vec3(z, x, y), vec3(9.75367, 83.3057, 390.353))) * 15485.653);\n  }\n}\n\nfloat linearInterpolate(float a, float b, float t) {\n  return a * (1.0 - t) + b * t;\n}\n\nfloat cosineInterpolate(float a, float b, float t) {\n  float cos_t = (1.0 - cos(t * 3.14159265359879323846264)) * 0.5;\n  return linearInterpolate(a, b, cos_t);\n}\n\n// given a point in 3d space, produces a noise value by interpolating surrounding points\nfloat interpolateNoise(float x, float y, float z, int numOctave) {\n  int integerX = int(floor(x));\n  float weightX = x - float(integerX);\n\n  int integerY = int(floor(y));\n  float weightY = y - float(integerY);\n\n  int integerZ = int(floor(z));\n  float weightZ = z - float(integerZ);\n\n  float v1 = generateNoise(integerX, integerY, integerZ, numOctave);\n  float v2 = generateNoise(integerX, integerY, integerZ + 1, numOctave);\n  float v3 = generateNoise(integerX, integerY + 1, integerZ + 1, numOctave);\n  float v4 = generateNoise(integerX, integerY + 1, integerZ, numOctave);\n\n  float v5 = generateNoise(integerX + 1, integerY, integerZ, numOctave);\n  float v6 = generateNoise(integerX + 1, integerY, integerZ + 1, numOctave);\n  float v7 = generateNoise(integerX + 1, integerY + 1, integerZ + 1, numOctave);\n  float v8 = generateNoise(integerX + 1, integerY + 1, integerZ, numOctave);\n\n  float i1 = cosineInterpolate(v1, v5, weightX);\n  float i2 = cosineInterpolate(v2, v6, weightX);\n  float i3 = cosineInterpolate(v3, v7, weightX);\n  float i4 = cosineInterpolate(v4, v8, weightX);\n\n  float ii1 = cosineInterpolate(i1, i4, weightY);\n  float ii2 = cosineInterpolate(i2, i3, weightY);\n\n  return cosineInterpolate(ii1, ii2, weightZ);\n}\n\n// a multi-octave noise generation function that sums multiple noise functions together\n// with each subsequent noise function increasing in frequency and decreasing in amplitude\nfloat generateMultiOctaveNoise(float x, float y, float z) {\n  float total = 0.0;\n  float persistence = 1.0 / noiseStrength;\n\n    //loop for some number of octaves\n  for(int i = 0; i < aLargeNumber; i++) {\n    if(i == numOctaves)\n      break;\n    float frequency = pow(2.0, float(i));\n    float amplitude = pow(persistence, float(i));\n\n    total += interpolateNoise(x * frequency, y * frequency, z * frequency, i) * amplitude;\n  }\n\n  return total;\n}\n\nvoid main() {\n  float offset = generateMultiOctaveNoise(position[0] + time / 999.0, position[1] + time / 999.0, position[2] + time / 999.0);\n  vec3 newPosition = position + offset * normal * audioScale;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  vUv = uv;\n  vNormal = normal;\n  vNoise = offset;\n}";
+},{}],"src/assets/libs/shaders/Songfragment.glsl":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nvarying float vNoise;\nvarying vec3 vNormal;\n\nfloat linearInterpolate(float a, float b, float t) {\n    return a * (1.0 - t) + b * t;\n}\n\nvoid main() {\n    float r = linearInterpolate(0.0, 0.9, vNoise);\n    float g = linearInterpolate(0.0, 0.9, vNoise);\n    float b = linearInterpolate(0.0, 0.9, vNoise);\n\n    gl_FragColor = vec4(r, g, b, 1.0);\n  //gl_FragColor = vec4(vNormal.rgb, 1.0);\n}";
-},{}],"src/assets/shaders/Songfragment.glsl":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying float vNoise;\nuniform int numOctaves;\nuniform float time;\nuniform float noiseStrength;\nuniform float audioScale;\nconst int aLargeNumber = 10;\n\nfloat generateNoise(int x, int y, int z, int numOctave) {\n    if(numOctave == 0) {\n        return fract(sin(dot(vec3(x, y, z), vec3(12.9898, 78.23, 107.81))) * 43758.5453);\n    } else if(numOctave == 1) {\n        return fract(sin(dot(vec3(z, x, y), vec3(16.363, 43.597, 199.73))) * 69484.7539);\n    } else if(numOctave == 2) {\n        return fract(sin(dot(vec3(y, x, z), vec3(13.0, 68.819, 90.989))) * 92041.9823);\n    } else if(numOctave == 3) {\n        return fract(sin(dot(vec3(x, y, z), vec3(98.1577, 47.45029, 154.85161))) * 84499.0);\n    } else if(numOctave == 4) {\n        return fract(sin(dot(vec3(z, x, y), vec3(9.75367, 83.3057, 390.353))) * 15485.653);\n    }\n}\n\nfloat linearInterpolate(float a, float b, float t) {\n    return a * (1.0 - t) + b * t;\n}\n\nfloat cosineInterpolate(float a, float b, float t) {\n    float cos_t = (1.0 - cos(t * 3.14159265359879323846264)) * 0.5;\n    return linearInterpolate(a, b, cos_t);\n}\n\n// given a point in 3d space, produces a noise value by interpolating surrounding points\nfloat interpolateNoise(float x, float y, float z, int numOctave) {\n    int integerX = int(floor(x));\n    float weightX = x - float(integerX);\n\n    int integerY = int(floor(y));\n    float weightY = y - float(integerY);\n\n    int integerZ = int(floor(z));\n    float weightZ = z - float(integerZ);\n\n    float v1 = generateNoise(integerX, integerY, integerZ, numOctave);\n    float v2 = generateNoise(integerX, integerY, integerZ + 1, numOctave);\n    float v3 = generateNoise(integerX, integerY + 1, integerZ + 1, numOctave);\n    float v4 = generateNoise(integerX, integerY + 1, integerZ, numOctave);\n\n    float v5 = generateNoise(integerX + 1, integerY, integerZ, numOctave);\n    float v6 = generateNoise(integerX + 1, integerY, integerZ + 1, numOctave);\n    float v7 = generateNoise(integerX + 1, integerY + 1, integerZ + 1, numOctave);\n    float v8 = generateNoise(integerX + 1, integerY + 1, integerZ, numOctave);\n\n    float i1 = cosineInterpolate(v1, v5, weightX);\n    float i2 = cosineInterpolate(v2, v6, weightX);\n    float i3 = cosineInterpolate(v3, v7, weightX);\n    float i4 = cosineInterpolate(v4, v8, weightX);\n\n    float ii1 = cosineInterpolate(i1, i4, weightY);\n    float ii2 = cosineInterpolate(i2, i3, weightY);\n\n    return cosineInterpolate(ii1, ii2, weightZ);\n}\n\n// a multi-octave noise generation function that sums multiple noise functions together\n// with each subsequent noise function increasing in frequency and decreasing in amplitude\nfloat generateMultiOctaveNoise(float x, float y, float z) {\n    float total = 0.0;\n    float persistence = 1.0 / noiseStrength;\n\n    //loop for some number of octaves\n    for(int i = 0; i < aLargeNumber; i++) {\n        if(i == numOctaves)\n            break;\n        float frequency = pow(2.0, float(i));\n        float amplitude = pow(persistence, float(i));\n\n        total += interpolateNoise(x * frequency, y * frequency, z * frequency, i) * amplitude;\n    }\n\n    return total;\n}\n\nvoid main() {\n    float offset = generateMultiOctaveNoise(position[0] + time / 999.0, position[1] + time / 999.0, position[2] + time / 999.0);\n    vec3 newPosition = position + offset * normal * audioScale;\n\n    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n    vUv = uv;\n    vNormal = normal;\n    vNoise = offset;\n}";
 },{}],"node_modules/fast-unique-numbers/build/es5/bundle.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
@@ -59266,120 +59266,97 @@ exports.analyze = analyze;
 const guess = webAudioBeatDetector.guess;
 exports.guess = guess;
 URL.revokeObjectURL(url);
-},{"web-audio-beat-detector-broker":"node_modules/web-audio-beat-detector-broker/build/es2019/module.js","./worker/worker":"node_modules/web-audio-beat-detector/build/es2019/worker/worker.js"}],"src/assets/libs/Audio.js":[function(require,module,exports) {
+},{"web-audio-beat-detector-broker":"node_modules/web-audio-beat-detector-broker/build/es2019/module.js","./worker/worker":"node_modules/web-audio-beat-detector/build/es2019/worker/worker.js"}],"src/assets/libs/math.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = Framework;
+exports.fractionate = fractionate;
+exports.modulate = modulate;
+exports.avg = avg;
+exports.max = max;
+exports.getRandomInt = getRandomInt;
+exports.getRandomArbitrary = getRandomArbitrary;
+exports.getAverageVolume = getAverageVolume;
+exports.mapVolumeToNoiseStrength = mapVolumeToNoiseStrength;
+exports.e = exports.PI = exports.sinh = exports.cosh = exports.tanh = void 0;
 
-var _webAudioBeatDetector = require("web-audio-beat-detector");
+function fractionate(val, minVal, maxVal) {
+  return (val - minVal) / (maxVal - minVal);
+}
 
-// when the scene is done initializing, the function passed as `callback` will be executed
-// then, every frame, the function passed as `update` will be executed
-function Framework(callback, update) {
-  //var gui = new DAT.GUI();
-  var framework = {
-    //gui: gui,
-    paused: false,
-    audioStartOffset: 0,
-    audioStartTime: 0,
-    audioBuffer: undefined,
-    cameraPaused: false,
-    automaticSwitchingOn: true
-  };
+function modulate(val, minVal, maxVal, outMin, outMax) {
+  var fr = fractionate(val, minVal, maxVal);
+  var delta = outMax - outMin;
+  return outMin + fr * delta;
+}
 
-  function createAndConnectAudioBuffer() {
-    // create the source buffer
-    framework.audioSourceBuffer = framework.audioContext.createBufferSource(); // connect source and analyser
+function avg(arr) {
+  var total = arr.reduce(function (sum, b) {
+    return sum + b;
+  });
+  return total / arr.length;
+}
 
-    framework.audioSourceBuffer.connect(framework.audioAnalyser);
-    framework.audioAnalyser.connect(framework.audioContext.destination);
-  }
-
-  function playAudio(file) {
-    createAndConnectAudioBuffer();
-    framework.audioFile = file;
-    var fileName = framework.audioFile.name;
-    document.getElementById('guide').innerHTML = "Playing " + fileName;
-    var fileReader = new FileReader();
-
-    fileReader.onload = function (e) {
-      var fileResult = fileReader.result;
-      framework.audioContext.decodeAudioData(fileResult, function (buffer) {
-        framework.audioSourceBuffer.buffer = buffer;
-        framework.audioBuffer = buffer;
-        framework.audioSourceBuffer.start();
-        framework.audioSourceBuffer.loop = true;
-        (0, _webAudioBeatDetector.analyze)(framework.audioSourceBuffer.buffer).then(function (bpm) {
-          // the bpm could be analyzed 
-          framework.songBPM = bpm;
-        }).catch(function (err) {
-          // something went wrong 
-          console.log("couldn't detect BPM");
-        });
-      }, function (e) {
-        "Error with decoding audio data" + e.err;
-      });
-    };
-
-    fileReader.readAsArrayBuffer(framework.audioFile);
-  } // run this function after the window loads
-
-
-  window.addEventListener('load', function () {
-    // set up audio processing
-    framework.audioContext = new (window.AudioContext || window.webkitAudioContext)(); // create analyser
-
-    framework.audioAnalyser = framework.audioContext.createAnalyser();
-    framework.audioAnalyser.smoothingTimeConstant = 0.3;
-    framework.audioAnalyser.fftSize = 1024; // create the source buffer
-
-    framework.audioSourceBuffer = framework.audioContext.createBufferSource(); // connect source and analyser
-
-    framework.audioSourceBuffer.connect(framework.audioAnalyser);
-    framework.audioAnalyser.connect(framework.audioContext.destination); // add drag and drop functionality for uploading audio file
-
-    window.addEventListener("dragenter", dragenter, false);
-    window.addEventListener("dragover", dragover, false);
-    window.addEventListener("drop", drop, false); // add pausing functionality via spacebar
-
-    window.addEventListener("keypress", keypress, false);
-
-    function dragenter(e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-
-    function dragover(e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-
-    function drop(e) {
-      e.stopPropagation();
-      e.preventDefault();
-
-      if (framework.audioFile == undefined) {
-        playAudio(e.dataTransfer.files[0]);
-      } else {
-        // stop current visualization and load new song
-        framework.audioSourceBuffer.stop();
-        playAudio(e.dataTransfer.files[0]);
-      }
-    } // assign THREE.js objects to the object we will return
-
-
-    this.update = function () {
-      update(framework);
-    }; // we will pass the scene, gui, renderer, camera, etc... to the callback function
-
-
-    return callback(framework);
+function max(arr) {
+  return arr.reduce(function (a, b) {
+    return Math.max(a, b);
   });
 }
-},{"web-audio-beat-detector":"node_modules/web-audio-beat-detector/build/es2019/module.js"}],"src/Subjects/Sun.js":[function(require,module,exports) {
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+var tanh = Math.tanh || function tanh(x) {
+  return (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x));
+};
+
+exports.tanh = tanh;
+
+var cosh = Math.cosh || function cosh(x) {
+  return (Math.exp(x) + Math.exp(-x)) / 2;
+};
+
+exports.cosh = cosh;
+
+var sinh = Math.sinh || function sinh(x) {
+  return (Math.exp(x) - Math.exp(-x)) / 2;
+};
+
+exports.sinh = sinh;
+
+function getAverageVolume(array) {
+  var values = 0;
+  var average;
+  var length = array.length; // get all the frequency amplitudes
+
+  for (var i = 0; i < length; i++) {
+    values += array[i];
+  }
+
+  average = values / length;
+  return average;
+}
+
+function mapVolumeToNoiseStrength(vol) {
+  // map range from 0 -> 150 to 4 -> 1
+  var result = vol / 150 * (1 - 4) + 4;
+  return result;
+}
+
+var PI = 3.14159265;
+exports.PI = PI;
+var e = 2.7181718;
+exports.e = e;
+},{}],"src/Subjects/Sun.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -59393,11 +59370,13 @@ var THREE = _interopRequireWildcard(require("three"));
 
 var _song = _interopRequireDefault(require("../assets/song.mp3"));
 
-var _songVertex = _interopRequireDefault(require("../assets/shaders/songVertex.glsl"));
+var _songVertex = _interopRequireDefault(require("../assets/libs/shaders/songVertex.glsl"));
 
-var _Songfragment = _interopRequireDefault(require("../assets/shaders/Songfragment.glsl"));
+var _Songfragment = _interopRequireDefault(require("../assets/libs/shaders/Songfragment.glsl"));
 
-var _Audio = _interopRequireDefault(require("../assets/libs/Audio"));
+var _webAudioBeatDetector = require("web-audio-beat-detector");
+
+var _math = require("../assets/libs/math");
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
@@ -59405,12 +59384,34 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var AUDIOSOBJECT = {
+  paused: false,
+  audioStartOffset: 0,
+  audioStartTime: 0,
+  audioBuffer: undefined,
+  cameraPaused: false,
+  automaticSwitchingOn: true,
+  songBPM: null
+};
+
 function Sun(scene, time) {
-  var icosahedrongeometry = new THREE.IcosahedronGeometry(1, 3);
+  window.addEventListener("dragenter", dragenter, false);
+  window.addEventListener("dragover", dragover, false);
+  window.addEventListener("drop", drop, false);
+  var sound = new Audio(_song.default);
+  sound.play();
+  AUDIOSOBJECT.audioContext = new AudioContext();
+  AUDIOSOBJECT.audioAnalyser = AUDIOSOBJECT.audioContext.createAnalyser();
+  AUDIOSOBJECT.smoothingTimeCnstant = .3;
+  AUDIOSOBJECT.fftSize = 1024;
+  AUDIOSOBJECT.audioSourceBuffer = AUDIOSOBJECT.audioContext.createBufferSource();
+  AUDIOSOBJECT.audioSourceBuffer.connect(AUDIOSOBJECT.audioAnalyser);
+  AUDIOSOBJECT.audioAnalyser.connect(AUDIOSOBJECT.audioContext.destination); // playAudio( song )
+
+  var icosahedrongeometry = new THREE.IcosahedronGeometry(5, 10);
   var icosahedronMaterial = new THREE.ShaderMaterial({
     uniforms: {
       time: {
-        // Check the Three.JS documentation for the different allowed types and values
         type: "f",
         value: 0
       },
@@ -59432,40 +59433,82 @@ function Sun(scene, time) {
   });
   var mesh = new THREE.Mesh(icosahedrongeometry, icosahedronMaterial);
   scene.add(mesh);
-  var framework = new _Audio.default();
 
-  this.update = function () {
-    icosahedronMaterial.uniforms.time.value = Date.now() - programStartTime;
+  this.update = function (elapsedTime) {
+    icosahedronMaterial.uniforms.time.value = elapsedTime;
 
-    if (framework.audioSourceBuffer.buffer != undefined) {
-      var array = new Uint8Array(framework.audioAnalyser.frequencyBinCount);
-      framework.audioAnalyser.getByteFrequencyData(array);
-      var average = getAverageVolume(array); //console.log('VOLUME:' + average); //here's the volume
-
-      var newNoiseStrength = mapVolumeToNoiseStrength(average); //console.log(newNoiseStrength);
-
-      icosahedronMaterial.uniforms.noiseStrength.value = newNoiseStrength;
+    if (AUDIOSOBJECT.buffer != undefined) {
+      var array = new Uint8Array(AUDIOSOBJECT.audioAnalyser.frequencyBitCount);
+      AUDIOSOBJECT.audioAnalyser.getByteFrequencyData(array);
+      var avg = (0, _math.getAverageVolume)(array);
+      var newNoise = (0, _math.mapVolumeToNoiseStrength)(average);
+      icosahedronMaterial.uniforms.noiseStrength.value = newNoise;
     }
 
-    icosahedronMaterial.needsUpdate = true;
+    icosahedronMaterial.needsUpdate; // console.log( AUDIOSOBJECT )
   };
 
-  function timeIsOnBeat(framework, fraction) {
-    var time = framework.audioContext.currentTime - framework.audioStartTime; // in seconds
+  function createAndConnectAudioBuffer() {
+    // create the source buffer
+    AUDIOSOBJECT.audioSourceBuffer = AUDIOSOBJECT.audioContext.createBufferSource(); // connect source and analyser
 
-    var divisor = framework.songBPM == undefined ? 120 : framework.songBPM;
-    divisor = divisor / 60;
-    divisor = divisor / fraction;
-    var epsilon = 0.01;
+    AUDIOSOBJECT.audioSourceBuffer.connect(AUDIOSOBJECT.audioAnalyser);
+    AUDIOSOBJECT.audioAnalyser.connect(AUDIOSOBJECT.audioContext.destination);
+  }
 
-    if (time % divisor < epsilon) {
-      return true;
+  function playAudio(file) {
+    AUDIOSOBJECT.file = file;
+    console.log(file);
+    createAndConnectAudioBuffer();
+    var fileReader = new FileReader();
+
+    fileReader.onload = function (e) {
+      var fileResult = fileReader.result;
+      AUDIOSOBJECT.audioContext.decodeAudioData(fileResult, function (buffer) {
+        AUDIOSOBJECT.audioSourceBuffer.buffer = buffer;
+        AUDIOSOBJECT.audioBuffer = buffer;
+        AUDIOSOBJECT.audioSourceBuffer.start();
+        AUDIOSOBJECT.audioSourceBuffer.loop = true;
+        (0, _webAudioBeatDetector.analyze)(AUDIOSOBJECT.audioSourceBuffer.buffer).then(function (bpm) {
+          // the bpm could be analyzed 
+          AUDIOSOBJECT.songBPM = bpm;
+        }).catch(function (err) {
+          // something went wrong 
+          console.log("couldn't detect BPM");
+        });
+      }, function (e) {
+        "Error with decoding audio data" + e.err;
+      });
+    };
+
+    fileReader.readAsArrayBuffer(AUDIOSOBJECT.audioFile);
+  }
+
+  function dragenter(e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
+  function dragover(e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
+  function drop(e) {
+    console.log(e);
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (AUDIOSOBJECT.audioFile == undefined) {
+      playAudio(e.dataTransfer.files[0]);
     } else {
-      return false;
+      // stop current visualization and load new song
+      AUDIOSOBJECT.audioSourceBuffer.stop();
+      playAudio(e.dataTransfer.files[0]);
     }
   }
 }
-},{"simplex-noise":"node_modules/simplex-noise/simplex-noise.js","three":"node_modules/three/build/three.module.js","../assets/song.mp3":"src/assets/song.mp3","../assets/shaders/songVertex.glsl":"src/assets/shaders/songVertex.glsl","../assets/shaders/Songfragment.glsl":"src/assets/shaders/Songfragment.glsl","../assets/libs/Audio":"src/assets/libs/Audio.js"}],"node_modules/three/examples/jsm/controls/OrbitControls.js":[function(require,module,exports) {
+},{"simplex-noise":"node_modules/simplex-noise/simplex-noise.js","three":"node_modules/three/build/three.module.js","../assets/song.mp3":"src/assets/song.mp3","../assets/libs/shaders/songVertex.glsl":"src/assets/libs/shaders/songVertex.glsl","../assets/libs/shaders/Songfragment.glsl":"src/assets/libs/shaders/Songfragment.glsl","web-audio-beat-detector":"node_modules/web-audio-beat-detector/build/es2019/module.js","../assets/libs/math":"src/assets/libs/math.js"}],"node_modules/three/examples/jsm/controls/OrbitControls.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -60393,8 +60436,7 @@ function SceneManager(canvas) {
   }
 
   function createSceneSubjects(scene) {
-    var sceneSubjects = [new _GeneralLights.default(scene), new _SceneSubject.default(scene), new _PolyTerrain.default(scene) // new Sun( scene )
-    ];
+    var sceneSubjects = [new _GeneralLights.default(scene), new _SceneSubject.default(scene), new _PolyTerrain.default(scene), new _Sun.default(scene)];
     return sceneSubjects;
   }
 
@@ -60478,7 +60520,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63513" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53377" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
