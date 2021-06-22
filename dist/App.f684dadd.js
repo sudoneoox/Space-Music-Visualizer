@@ -36318,7 +36318,7 @@ function GeneralLights(scene) {
   // color 2222ff
   var pointLight = new _three.PointLight("#ffffff", 1);
   pointLight.position.set(0, 40, 0);
-  var ambientLight = new _three.AmbientLight('#ffffff', .1);
+  var ambientLight = new _three.AmbientLight('#ffff00', .1);
   scene.add(ambientLight);
   scene.add(pointLight);
 
@@ -36327,555 +36327,94 @@ function GeneralLights(scene) {
     pointLight.color.setHSL(Math.sin(time), 0.5, 0.5);
   };
 }
-},{"three":"node_modules/three/build/three.module.js"}],"src/Subjects/SceneSubject.js":[function(require,module,exports) {
+},{"three":"node_modules/three/build/three.module.js"}],"src/assets/libs/math.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = SceneSubject;
+exports.fractionate = fractionate;
+exports.modulate = modulate;
+exports.avg = avg;
+exports.max = max;
+exports.getRandomInt = getRandomInt;
+exports.getRandomArbitrary = getRandomArbitrary;
+exports.getAverageVolume = getAverageVolume;
+exports.mapVolumeToNoiseStrength = mapVolumeToNoiseStrength;
+exports.e = exports.sinh = exports.cosh = exports.tanh = void 0;
 
-var THREE = _interopRequireWildcard(require("three"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-function SceneSubject(scene) {
-  var radius = 2;
-  var mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(radius, 2), new THREE.MeshStandardMaterial({
-    flatShading: true
-  }));
-  mesh.position.set(0, 0, 0);
-  scene.add(mesh);
-
-  this.update = function (time) {
-    var scale = Math.sin(time) + 2;
-    mesh.scale.set(scale, scale, scale);
-  };
+function fractionate(val, minVal, maxVal) {
+  return (val - minVal) / (maxVal - minVal);
 }
-},{"three":"node_modules/three/build/three.module.js"}],"node_modules/simplex-noise/simplex-noise.js":[function(require,module,exports) {
-var define;
-/*
- * A fast javascript implementation of simplex noise by Jonas Wagner
 
-Based on a speed-improved simplex noise algorithm for 2D, 3D and 4D in Java.
-Which is based on example code by Stefan Gustavson (stegu@itn.liu.se).
-With Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
-Better rank ordering method by Stefan Gustavson in 2012.
+function modulate(val, minVal, maxVal, outMin, outMax) {
+  var fr = fractionate(val, minVal, maxVal);
+  var delta = outMax - outMin;
+  return outMin + fr * delta;
+}
 
-
- Copyright (c) 2018 Jonas Wagner
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
-(function() {
-  'use strict';
-
-  var F2 = 0.5 * (Math.sqrt(3.0) - 1.0);
-  var G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
-  var F3 = 1.0 / 3.0;
-  var G3 = 1.0 / 6.0;
-  var F4 = (Math.sqrt(5.0) - 1.0) / 4.0;
-  var G4 = (5.0 - Math.sqrt(5.0)) / 20.0;
-
-  function SimplexNoise(randomOrSeed) {
-    var random;
-    if (typeof randomOrSeed == 'function') {
-      random = randomOrSeed;
-    }
-    else if (randomOrSeed) {
-      random = alea(randomOrSeed);
-    } else {
-      random = Math.random;
-    }
-    this.p = buildPermutationTable(random);
-    this.perm = new Uint8Array(512);
-    this.permMod12 = new Uint8Array(512);
-    for (var i = 0; i < 512; i++) {
-      this.perm[i] = this.p[i & 255];
-      this.permMod12[i] = this.perm[i] % 12;
-    }
-
-  }
-  SimplexNoise.prototype = {
-    grad3: new Float32Array([1, 1, 0,
-      -1, 1, 0,
-      1, -1, 0,
-
-      -1, -1, 0,
-      1, 0, 1,
-      -1, 0, 1,
-
-      1, 0, -1,
-      -1, 0, -1,
-      0, 1, 1,
-
-      0, -1, 1,
-      0, 1, -1,
-      0, -1, -1]),
-    grad4: new Float32Array([0, 1, 1, 1, 0, 1, 1, -1, 0, 1, -1, 1, 0, 1, -1, -1,
-      0, -1, 1, 1, 0, -1, 1, -1, 0, -1, -1, 1, 0, -1, -1, -1,
-      1, 0, 1, 1, 1, 0, 1, -1, 1, 0, -1, 1, 1, 0, -1, -1,
-      -1, 0, 1, 1, -1, 0, 1, -1, -1, 0, -1, 1, -1, 0, -1, -1,
-      1, 1, 0, 1, 1, 1, 0, -1, 1, -1, 0, 1, 1, -1, 0, -1,
-      -1, 1, 0, 1, -1, 1, 0, -1, -1, -1, 0, 1, -1, -1, 0, -1,
-      1, 1, 1, 0, 1, 1, -1, 0, 1, -1, 1, 0, 1, -1, -1, 0,
-      -1, 1, 1, 0, -1, 1, -1, 0, -1, -1, 1, 0, -1, -1, -1, 0]),
-    noise2D: function(xin, yin) {
-      var permMod12 = this.permMod12;
-      var perm = this.perm;
-      var grad3 = this.grad3;
-      var n0 = 0; // Noise contributions from the three corners
-      var n1 = 0;
-      var n2 = 0;
-      // Skew the input space to determine which simplex cell we're in
-      var s = (xin + yin) * F2; // Hairy factor for 2D
-      var i = Math.floor(xin + s);
-      var j = Math.floor(yin + s);
-      var t = (i + j) * G2;
-      var X0 = i - t; // Unskew the cell origin back to (x,y) space
-      var Y0 = j - t;
-      var x0 = xin - X0; // The x,y distances from the cell origin
-      var y0 = yin - Y0;
-      // For the 2D case, the simplex shape is an equilateral triangle.
-      // Determine which simplex we are in.
-      var i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
-      if (x0 > y0) {
-        i1 = 1;
-        j1 = 0;
-      } // lower triangle, XY order: (0,0)->(1,0)->(1,1)
-      else {
-        i1 = 0;
-        j1 = 1;
-      } // upper triangle, YX order: (0,0)->(0,1)->(1,1)
-      // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
-      // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
-      // c = (3-sqrt(3))/6
-      var x1 = x0 - i1 + G2; // Offsets for middle corner in (x,y) unskewed coords
-      var y1 = y0 - j1 + G2;
-      var x2 = x0 - 1.0 + 2.0 * G2; // Offsets for last corner in (x,y) unskewed coords
-      var y2 = y0 - 1.0 + 2.0 * G2;
-      // Work out the hashed gradient indices of the three simplex corners
-      var ii = i & 255;
-      var jj = j & 255;
-      // Calculate the contribution from the three corners
-      var t0 = 0.5 - x0 * x0 - y0 * y0;
-      if (t0 >= 0) {
-        var gi0 = permMod12[ii + perm[jj]] * 3;
-        t0 *= t0;
-        n0 = t0 * t0 * (grad3[gi0] * x0 + grad3[gi0 + 1] * y0); // (x,y) of grad3 used for 2D gradient
-      }
-      var t1 = 0.5 - x1 * x1 - y1 * y1;
-      if (t1 >= 0) {
-        var gi1 = permMod12[ii + i1 + perm[jj + j1]] * 3;
-        t1 *= t1;
-        n1 = t1 * t1 * (grad3[gi1] * x1 + grad3[gi1 + 1] * y1);
-      }
-      var t2 = 0.5 - x2 * x2 - y2 * y2;
-      if (t2 >= 0) {
-        var gi2 = permMod12[ii + 1 + perm[jj + 1]] * 3;
-        t2 *= t2;
-        n2 = t2 * t2 * (grad3[gi2] * x2 + grad3[gi2 + 1] * y2);
-      }
-      // Add contributions from each corner to get the final noise value.
-      // The result is scaled to return values in the interval [-1,1].
-      return 70.0 * (n0 + n1 + n2);
-    },
-    // 3D simplex noise
-    noise3D: function(xin, yin, zin) {
-      var permMod12 = this.permMod12;
-      var perm = this.perm;
-      var grad3 = this.grad3;
-      var n0, n1, n2, n3; // Noise contributions from the four corners
-      // Skew the input space to determine which simplex cell we're in
-      var s = (xin + yin + zin) * F3; // Very nice and simple skew factor for 3D
-      var i = Math.floor(xin + s);
-      var j = Math.floor(yin + s);
-      var k = Math.floor(zin + s);
-      var t = (i + j + k) * G3;
-      var X0 = i - t; // Unskew the cell origin back to (x,y,z) space
-      var Y0 = j - t;
-      var Z0 = k - t;
-      var x0 = xin - X0; // The x,y,z distances from the cell origin
-      var y0 = yin - Y0;
-      var z0 = zin - Z0;
-      // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
-      // Determine which simplex we are in.
-      var i1, j1, k1; // Offsets for second corner of simplex in (i,j,k) coords
-      var i2, j2, k2; // Offsets for third corner of simplex in (i,j,k) coords
-      if (x0 >= y0) {
-        if (y0 >= z0) {
-          i1 = 1;
-          j1 = 0;
-          k1 = 0;
-          i2 = 1;
-          j2 = 1;
-          k2 = 0;
-        } // X Y Z order
-        else if (x0 >= z0) {
-          i1 = 1;
-          j1 = 0;
-          k1 = 0;
-          i2 = 1;
-          j2 = 0;
-          k2 = 1;
-        } // X Z Y order
-        else {
-          i1 = 0;
-          j1 = 0;
-          k1 = 1;
-          i2 = 1;
-          j2 = 0;
-          k2 = 1;
-        } // Z X Y order
-      }
-      else { // x0<y0
-        if (y0 < z0) {
-          i1 = 0;
-          j1 = 0;
-          k1 = 1;
-          i2 = 0;
-          j2 = 1;
-          k2 = 1;
-        } // Z Y X order
-        else if (x0 < z0) {
-          i1 = 0;
-          j1 = 1;
-          k1 = 0;
-          i2 = 0;
-          j2 = 1;
-          k2 = 1;
-        } // Y Z X order
-        else {
-          i1 = 0;
-          j1 = 1;
-          k1 = 0;
-          i2 = 1;
-          j2 = 1;
-          k2 = 0;
-        } // Y X Z order
-      }
-      // A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
-      // a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
-      // a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
-      // c = 1/6.
-      var x1 = x0 - i1 + G3; // Offsets for second corner in (x,y,z) coords
-      var y1 = y0 - j1 + G3;
-      var z1 = z0 - k1 + G3;
-      var x2 = x0 - i2 + 2.0 * G3; // Offsets for third corner in (x,y,z) coords
-      var y2 = y0 - j2 + 2.0 * G3;
-      var z2 = z0 - k2 + 2.0 * G3;
-      var x3 = x0 - 1.0 + 3.0 * G3; // Offsets for last corner in (x,y,z) coords
-      var y3 = y0 - 1.0 + 3.0 * G3;
-      var z3 = z0 - 1.0 + 3.0 * G3;
-      // Work out the hashed gradient indices of the four simplex corners
-      var ii = i & 255;
-      var jj = j & 255;
-      var kk = k & 255;
-      // Calculate the contribution from the four corners
-      var t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
-      if (t0 < 0) n0 = 0.0;
-      else {
-        var gi0 = permMod12[ii + perm[jj + perm[kk]]] * 3;
-        t0 *= t0;
-        n0 = t0 * t0 * (grad3[gi0] * x0 + grad3[gi0 + 1] * y0 + grad3[gi0 + 2] * z0);
-      }
-      var t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
-      if (t1 < 0) n1 = 0.0;
-      else {
-        var gi1 = permMod12[ii + i1 + perm[jj + j1 + perm[kk + k1]]] * 3;
-        t1 *= t1;
-        n1 = t1 * t1 * (grad3[gi1] * x1 + grad3[gi1 + 1] * y1 + grad3[gi1 + 2] * z1);
-      }
-      var t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
-      if (t2 < 0) n2 = 0.0;
-      else {
-        var gi2 = permMod12[ii + i2 + perm[jj + j2 + perm[kk + k2]]] * 3;
-        t2 *= t2;
-        n2 = t2 * t2 * (grad3[gi2] * x2 + grad3[gi2 + 1] * y2 + grad3[gi2 + 2] * z2);
-      }
-      var t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
-      if (t3 < 0) n3 = 0.0;
-      else {
-        var gi3 = permMod12[ii + 1 + perm[jj + 1 + perm[kk + 1]]] * 3;
-        t3 *= t3;
-        n3 = t3 * t3 * (grad3[gi3] * x3 + grad3[gi3 + 1] * y3 + grad3[gi3 + 2] * z3);
-      }
-      // Add contributions from each corner to get the final noise value.
-      // The result is scaled to stay just inside [-1,1]
-      return 32.0 * (n0 + n1 + n2 + n3);
-    },
-    // 4D simplex noise, better simplex rank ordering method 2012-03-09
-    noise4D: function(x, y, z, w) {
-      var perm = this.perm;
-      var grad4 = this.grad4;
-
-      var n0, n1, n2, n3, n4; // Noise contributions from the five corners
-      // Skew the (x,y,z,w) space to determine which cell of 24 simplices we're in
-      var s = (x + y + z + w) * F4; // Factor for 4D skewing
-      var i = Math.floor(x + s);
-      var j = Math.floor(y + s);
-      var k = Math.floor(z + s);
-      var l = Math.floor(w + s);
-      var t = (i + j + k + l) * G4; // Factor for 4D unskewing
-      var X0 = i - t; // Unskew the cell origin back to (x,y,z,w) space
-      var Y0 = j - t;
-      var Z0 = k - t;
-      var W0 = l - t;
-      var x0 = x - X0; // The x,y,z,w distances from the cell origin
-      var y0 = y - Y0;
-      var z0 = z - Z0;
-      var w0 = w - W0;
-      // For the 4D case, the simplex is a 4D shape I won't even try to describe.
-      // To find out which of the 24 possible simplices we're in, we need to
-      // determine the magnitude ordering of x0, y0, z0 and w0.
-      // Six pair-wise comparisons are performed between each possible pair
-      // of the four coordinates, and the results are used to rank the numbers.
-      var rankx = 0;
-      var ranky = 0;
-      var rankz = 0;
-      var rankw = 0;
-      if (x0 > y0) rankx++;
-      else ranky++;
-      if (x0 > z0) rankx++;
-      else rankz++;
-      if (x0 > w0) rankx++;
-      else rankw++;
-      if (y0 > z0) ranky++;
-      else rankz++;
-      if (y0 > w0) ranky++;
-      else rankw++;
-      if (z0 > w0) rankz++;
-      else rankw++;
-      var i1, j1, k1, l1; // The integer offsets for the second simplex corner
-      var i2, j2, k2, l2; // The integer offsets for the third simplex corner
-      var i3, j3, k3, l3; // The integer offsets for the fourth simplex corner
-      // simplex[c] is a 4-vector with the numbers 0, 1, 2 and 3 in some order.
-      // Many values of c will never occur, since e.g. x>y>z>w makes x<z, y<w and x<w
-      // impossible. Only the 24 indices which have non-zero entries make any sense.
-      // We use a thresholding to set the coordinates in turn from the largest magnitude.
-      // Rank 3 denotes the largest coordinate.
-      i1 = rankx >= 3 ? 1 : 0;
-      j1 = ranky >= 3 ? 1 : 0;
-      k1 = rankz >= 3 ? 1 : 0;
-      l1 = rankw >= 3 ? 1 : 0;
-      // Rank 2 denotes the second largest coordinate.
-      i2 = rankx >= 2 ? 1 : 0;
-      j2 = ranky >= 2 ? 1 : 0;
-      k2 = rankz >= 2 ? 1 : 0;
-      l2 = rankw >= 2 ? 1 : 0;
-      // Rank 1 denotes the second smallest coordinate.
-      i3 = rankx >= 1 ? 1 : 0;
-      j3 = ranky >= 1 ? 1 : 0;
-      k3 = rankz >= 1 ? 1 : 0;
-      l3 = rankw >= 1 ? 1 : 0;
-      // The fifth corner has all coordinate offsets = 1, so no need to compute that.
-      var x1 = x0 - i1 + G4; // Offsets for second corner in (x,y,z,w) coords
-      var y1 = y0 - j1 + G4;
-      var z1 = z0 - k1 + G4;
-      var w1 = w0 - l1 + G4;
-      var x2 = x0 - i2 + 2.0 * G4; // Offsets for third corner in (x,y,z,w) coords
-      var y2 = y0 - j2 + 2.0 * G4;
-      var z2 = z0 - k2 + 2.0 * G4;
-      var w2 = w0 - l2 + 2.0 * G4;
-      var x3 = x0 - i3 + 3.0 * G4; // Offsets for fourth corner in (x,y,z,w) coords
-      var y3 = y0 - j3 + 3.0 * G4;
-      var z3 = z0 - k3 + 3.0 * G4;
-      var w3 = w0 - l3 + 3.0 * G4;
-      var x4 = x0 - 1.0 + 4.0 * G4; // Offsets for last corner in (x,y,z,w) coords
-      var y4 = y0 - 1.0 + 4.0 * G4;
-      var z4 = z0 - 1.0 + 4.0 * G4;
-      var w4 = w0 - 1.0 + 4.0 * G4;
-      // Work out the hashed gradient indices of the five simplex corners
-      var ii = i & 255;
-      var jj = j & 255;
-      var kk = k & 255;
-      var ll = l & 255;
-      // Calculate the contribution from the five corners
-      var t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
-      if (t0 < 0) n0 = 0.0;
-      else {
-        var gi0 = (perm[ii + perm[jj + perm[kk + perm[ll]]]] % 32) * 4;
-        t0 *= t0;
-        n0 = t0 * t0 * (grad4[gi0] * x0 + grad4[gi0 + 1] * y0 + grad4[gi0 + 2] * z0 + grad4[gi0 + 3] * w0);
-      }
-      var t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1;
-      if (t1 < 0) n1 = 0.0;
-      else {
-        var gi1 = (perm[ii + i1 + perm[jj + j1 + perm[kk + k1 + perm[ll + l1]]]] % 32) * 4;
-        t1 *= t1;
-        n1 = t1 * t1 * (grad4[gi1] * x1 + grad4[gi1 + 1] * y1 + grad4[gi1 + 2] * z1 + grad4[gi1 + 3] * w1);
-      }
-      var t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2;
-      if (t2 < 0) n2 = 0.0;
-      else {
-        var gi2 = (perm[ii + i2 + perm[jj + j2 + perm[kk + k2 + perm[ll + l2]]]] % 32) * 4;
-        t2 *= t2;
-        n2 = t2 * t2 * (grad4[gi2] * x2 + grad4[gi2 + 1] * y2 + grad4[gi2 + 2] * z2 + grad4[gi2 + 3] * w2);
-      }
-      var t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3;
-      if (t3 < 0) n3 = 0.0;
-      else {
-        var gi3 = (perm[ii + i3 + perm[jj + j3 + perm[kk + k3 + perm[ll + l3]]]] % 32) * 4;
-        t3 *= t3;
-        n3 = t3 * t3 * (grad4[gi3] * x3 + grad4[gi3 + 1] * y3 + grad4[gi3 + 2] * z3 + grad4[gi3 + 3] * w3);
-      }
-      var t4 = 0.6 - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4;
-      if (t4 < 0) n4 = 0.0;
-      else {
-        var gi4 = (perm[ii + 1 + perm[jj + 1 + perm[kk + 1 + perm[ll + 1]]]] % 32) * 4;
-        t4 *= t4;
-        n4 = t4 * t4 * (grad4[gi4] * x4 + grad4[gi4 + 1] * y4 + grad4[gi4 + 2] * z4 + grad4[gi4 + 3] * w4);
-      }
-      // Sum up and scale the result to cover the range [-1,1]
-      return 27.0 * (n0 + n1 + n2 + n3 + n4);
-    }
-  };
-
-  function buildPermutationTable(random) {
-    var i;
-    var p = new Uint8Array(256);
-    for (i = 0; i < 256; i++) {
-      p[i] = i;
-    }
-    for (i = 0; i < 255; i++) {
-      var r = i + ~~(random() * (256 - i));
-      var aux = p[i];
-      p[i] = p[r];
-      p[r] = aux;
-    }
-    return p;
-  }
-  SimplexNoise._buildPermutationTable = buildPermutationTable;
-
-  function alea() {
-    // Johannes Baagøe <baagoe@baagoe.com>, 2010
-    var s0 = 0;
-    var s1 = 0;
-    var s2 = 0;
-    var c = 1;
-
-    var mash = masher();
-    s0 = mash(' ');
-    s1 = mash(' ');
-    s2 = mash(' ');
-
-    for (var i = 0; i < arguments.length; i++) {
-      s0 -= mash(arguments[i]);
-      if (s0 < 0) {
-        s0 += 1;
-      }
-      s1 -= mash(arguments[i]);
-      if (s1 < 0) {
-        s1 += 1;
-      }
-      s2 -= mash(arguments[i]);
-      if (s2 < 0) {
-        s2 += 1;
-      }
-    }
-    mash = null;
-    return function() {
-      var t = 2091639 * s0 + c * 2.3283064365386963e-10; // 2^-32
-      s0 = s1;
-      s1 = s2;
-      return s2 = t - (c = t | 0);
-    };
-  }
-  function masher() {
-    var n = 0xefc8249d;
-    return function(data) {
-      data = data.toString();
-      for (var i = 0; i < data.length; i++) {
-        n += data.charCodeAt(i);
-        var h = 0.02519603282416938 * n;
-        n = h >>> 0;
-        h -= n;
-        h *= n;
-        n = h >>> 0;
-        h -= n;
-        n += h * 0x100000000; // 2^32
-      }
-      return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
-    };
-  }
-
-  // amd
-  if (typeof define !== 'undefined' && define.amd) define(function() {return SimplexNoise;});
-  // common js
-  if (typeof exports !== 'undefined') exports.SimplexNoise = SimplexNoise;
-  // browser
-  else if (typeof window !== 'undefined') window.SimplexNoise = SimplexNoise;
-  // nodejs
-  if (typeof module !== 'undefined') {
-    module.exports = SimplexNoise;
-  }
-
-})();
-
-},{}],"src/Subjects/PolyTerrain.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = Terrain;
-
-var _simplexNoise = _interopRequireDefault(require("simplex-noise"));
-
-var THREE = _interopRequireWildcard(require("three"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function Terrain(scene) {
-  var dimensions = {
-    width: 1000,
-    height: 1000
-  };
-  var segments = 20;
-  var vertices = segments + 1;
-  var simplex = new _simplexNoise.default(100);
-  var terrainGeometry = new THREE.PlaneBufferGeometry(dimensions.width, dimensions.height, segments, segments);
-  var material = new THREE.MeshLambertMaterial({
-    side: THREE.FrontSide,
-    wireframe: true
+function avg(arr) {
+  var total = arr.reduce(function (sum, b) {
+    return sum + b;
   });
-  terrainGeometry.rotateX(-Math.PI * .5);
-  var terrain = new THREE.Mesh(terrainGeometry, material);
-  terrain.position.set(0, -90, 0);
-  scene.add(terrain);
-
-  this.update = function () {
-    return null;
-  };
+  return total / arr.length;
 }
-},{"simplex-noise":"node_modules/simplex-noise/simplex-noise.js","three":"node_modules/three/build/three.module.js"}],"src/assets/song.mp3":[function(require,module,exports) {
-module.exports = "/song.6842c2fc.mp3";
-},{}],"src/assets/libs/shaders/songVertex.glsl":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying float vNoise;\nuniform int numOctaves;\nuniform float time;\nuniform float noiseStrength;\nuniform float audioScale;\nconst int aLargeNumber = 10;\n\nfloat generateNoise(int x, int y, int z, int numOctave) {\n  if(numOctave == 0) {\n    return fract(sin(dot(vec3(x, y, z), vec3(12.9898, 78.23, 107.81))) * 43758.5453);\n  } else if(numOctave == 1) {\n    return fract(sin(dot(vec3(z, x, y), vec3(16.363, 43.597, 199.73))) * 69484.7539);\n  } else if(numOctave == 2) {\n    return fract(sin(dot(vec3(y, x, z), vec3(13.0, 68.819, 90.989))) * 92041.9823);\n  } else if(numOctave == 3) {\n    return fract(sin(dot(vec3(x, y, z), vec3(98.1577, 47.45029, 154.85161))) * 84499.0);\n  } else if(numOctave == 4) {\n    return fract(sin(dot(vec3(z, x, y), vec3(9.75367, 83.3057, 390.353))) * 15485.653);\n  }\n}\n\nfloat linearInterpolate(float a, float b, float t) {\n  return a * (1.0 - t) + b * t;\n}\n\nfloat cosineInterpolate(float a, float b, float t) {\n  float cos_t = (1.0 - cos(t * 3.14159265359879323846264)) * 0.5;\n  return linearInterpolate(a, b, cos_t);\n}\n\n// given a point in 3d space, produces a noise value by interpolating surrounding points\nfloat interpolateNoise(float x, float y, float z, int numOctave) {\n  int integerX = int(floor(x));\n  float weightX = x - float(integerX);\n\n  int integerY = int(floor(y));\n  float weightY = y - float(integerY);\n\n  int integerZ = int(floor(z));\n  float weightZ = z - float(integerZ);\n\n  float v1 = generateNoise(integerX, integerY, integerZ, numOctave);\n  float v2 = generateNoise(integerX, integerY, integerZ + 1, numOctave);\n  float v3 = generateNoise(integerX, integerY + 1, integerZ + 1, numOctave);\n  float v4 = generateNoise(integerX, integerY + 1, integerZ, numOctave);\n\n  float v5 = generateNoise(integerX + 1, integerY, integerZ, numOctave);\n  float v6 = generateNoise(integerX + 1, integerY, integerZ + 1, numOctave);\n  float v7 = generateNoise(integerX + 1, integerY + 1, integerZ + 1, numOctave);\n  float v8 = generateNoise(integerX + 1, integerY + 1, integerZ, numOctave);\n\n  float i1 = cosineInterpolate(v1, v5, weightX);\n  float i2 = cosineInterpolate(v2, v6, weightX);\n  float i3 = cosineInterpolate(v3, v7, weightX);\n  float i4 = cosineInterpolate(v4, v8, weightX);\n\n  float ii1 = cosineInterpolate(i1, i4, weightY);\n  float ii2 = cosineInterpolate(i2, i3, weightY);\n\n  return cosineInterpolate(ii1, ii2, weightZ);\n}\n\n// a multi-octave noise generation function that sums multiple noise functions together\n// with each subsequent noise function increasing in frequency and decreasing in amplitude\nfloat generateMultiOctaveNoise(float x, float y, float z) {\n  float total = 0.0;\n  float persistence = 1.0 / noiseStrength;\n\n    //loop for some number of octaves\n  for(int i = 0; i < aLargeNumber; i++) {\n    if(i == numOctaves)\n      break;\n    float frequency = pow(2.0, float(i));\n    float amplitude = pow(persistence, float(i));\n\n    total += interpolateNoise(x * frequency, y * frequency, z * frequency, i) * amplitude;\n  }\n\n  return total;\n}\n\nvoid main() {\n  float offset = generateMultiOctaveNoise(position[0] + time / 999.0, position[1] + time / 999.0, position[2] + time / 999.0);\n  vec3 newPosition = position + offset * normal * audioScale;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  vUv = uv;\n  vNormal = normal;\n  vNoise = offset;\n}";
-},{}],"src/assets/libs/shaders/Songfragment.glsl":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nvarying float vNoise;\nvarying vec3 vNormal;\n\nfloat linearInterpolate(float a, float b, float t) {\n    return a * (1.0 - t) + b * t;\n}\n\nvoid main() {\n    float r = linearInterpolate(0.0, 0.9, vNoise);\n    float g = linearInterpolate(0.0, 0.9, vNoise);\n    float b = linearInterpolate(0.0, 0.9, vNoise);\n\n    gl_FragColor = vec4(r, g, b, 1.0);\n  //gl_FragColor = vec4(vNormal.rgb, 1.0);\n}";
+
+function max(arr) {
+  return arr.reduce(function (a, b) {
+    return Math.max(a, b);
+  });
+}
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+var tanh = Math.tanh || function tanh(x) {
+  return (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x));
+};
+
+exports.tanh = tanh;
+
+var cosh = Math.cosh || function cosh(x) {
+  return (Math.exp(x) + Math.exp(-x)) / 2;
+};
+
+exports.cosh = cosh;
+
+var sinh = Math.sinh || function sinh(x) {
+  return (Math.exp(x) - Math.exp(-x)) / 2;
+};
+
+exports.sinh = sinh;
+
+function getAverageVolume(array) {
+  var values = 0;
+  var average;
+  var length = array.length; // get all the frequency amplitudes
+
+  for (var i = 0; i < length; i++) {
+    values += array[i];
+  }
+
+  average = values / length;
+  return average;
+}
+
+function mapVolumeToNoiseStrength(vol) {
+  // map range from 0 -> 150 to 4 -> 1
+  var result = vol / 150 * (1 - 4) + 4;
+  return result;
+}
+
+var e = 2.7181718;
+exports.e = e;
 },{}],"node_modules/fast-unique-numbers/build/es5/bundle.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
@@ -59266,189 +58805,47 @@ exports.analyze = analyze;
 const guess = webAudioBeatDetector.guess;
 exports.guess = guess;
 URL.revokeObjectURL(url);
-},{"web-audio-beat-detector-broker":"node_modules/web-audio-beat-detector-broker/build/es2019/module.js","./worker/worker":"node_modules/web-audio-beat-detector/build/es2019/worker/worker.js"}],"src/assets/libs/math.js":[function(require,module,exports) {
+},{"web-audio-beat-detector-broker":"node_modules/web-audio-beat-detector-broker/build/es2019/module.js","./worker/worker":"node_modules/web-audio-beat-detector/build/es2019/worker/worker.js"}],"src/assets/song.mp3":[function(require,module,exports) {
+module.exports = "/song.6842c2fc.mp3";
+},{}],"src/AudioManager.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.fractionate = fractionate;
-exports.modulate = modulate;
-exports.avg = avg;
-exports.max = max;
-exports.getRandomInt = getRandomInt;
-exports.getRandomArbitrary = getRandomArbitrary;
-exports.getAverageVolume = getAverageVolume;
-exports.mapVolumeToNoiseStrength = mapVolumeToNoiseStrength;
-exports.e = exports.PI = exports.sinh = exports.cosh = exports.tanh = void 0;
-
-function fractionate(val, minVal, maxVal) {
-  return (val - minVal) / (maxVal - minVal);
-}
-
-function modulate(val, minVal, maxVal, outMin, outMax) {
-  var fr = fractionate(val, minVal, maxVal);
-  var delta = outMax - outMin;
-  return outMin + fr * delta;
-}
-
-function avg(arr) {
-  var total = arr.reduce(function (sum, b) {
-    return sum + b;
-  });
-  return total / arr.length;
-}
-
-function max(arr) {
-  return arr.reduce(function (a, b) {
-    return Math.max(a, b);
-  });
-}
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
-}
-
-function getRandomArbitrary(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-var tanh = Math.tanh || function tanh(x) {
-  return (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x));
-};
-
-exports.tanh = tanh;
-
-var cosh = Math.cosh || function cosh(x) {
-  return (Math.exp(x) + Math.exp(-x)) / 2;
-};
-
-exports.cosh = cosh;
-
-var sinh = Math.sinh || function sinh(x) {
-  return (Math.exp(x) - Math.exp(-x)) / 2;
-};
-
-exports.sinh = sinh;
-
-function getAverageVolume(array) {
-  var values = 0;
-  var average;
-  var length = array.length; // get all the frequency amplitudes
-
-  for (var i = 0; i < length; i++) {
-    values += array[i];
-  }
-
-  average = values / length;
-  return average;
-}
-
-function mapVolumeToNoiseStrength(vol) {
-  // map range from 0 -> 150 to 4 -> 1
-  var result = vol / 150 * (1 - 4) + 4;
-  return result;
-}
-
-var PI = 3.14159265;
-exports.PI = PI;
-var e = 2.7181718;
-exports.e = e;
-},{}],"src/Subjects/Sun.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = Sun;
-
-var _simplexNoise = _interopRequireDefault(require("simplex-noise"));
-
-var THREE = _interopRequireWildcard(require("three"));
-
-var _song = _interopRequireDefault(require("../assets/song.mp3"));
-
-var _songVertex = _interopRequireDefault(require("../assets/libs/shaders/songVertex.glsl"));
-
-var _Songfragment = _interopRequireDefault(require("../assets/libs/shaders/Songfragment.glsl"));
+exports.default = AudioManager;
 
 var _webAudioBeatDetector = require("web-audio-beat-detector");
 
-var _math = require("../assets/libs/math");
+var _song = _interopRequireDefault(require("./assets/song.mp3"));
 
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+var _three = require("three");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var AUDIOSOBJECT = {
-  paused: false,
-  audioStartOffset: 0,
-  audioStartTime: 0,
-  audioBuffer: undefined,
-  cameraPaused: false,
-  automaticSwitchingOn: true,
-  songBPM: null
-};
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function Sun(scene, time) {
-  window.addEventListener("dragenter", dragenter, false);
-  window.addEventListener("dragover", dragover, false);
-  window.addEventListener("drop", drop, false);
-  var sound = new Audio(_song.default);
-  sound.play();
-  AUDIOSOBJECT.audioContext = new AudioContext();
+function AudioManager() {
+  var _AUDIOSOBJECT;
+
+  var AUDIOSOBJECT = (_AUDIOSOBJECT = {
+    paused: false,
+    audioStartOffset: 0,
+    audioStartTime: 0,
+    audioBuffer: undefined,
+    cameraPaused: false,
+    automaticSwitchingOn: true,
+    songBPM: null
+  }, _defineProperty(_AUDIOSOBJECT, "audioBuffer", null), _defineProperty(_AUDIOSOBJECT, "audioAnalyser", null), _defineProperty(_AUDIOSOBJECT, "audioContext", null), _defineProperty(_AUDIOSOBJECT, "audioSourceBuffer", null), _defineProperty(_AUDIOSOBJECT, "songBPM", null), _defineProperty(_AUDIOSOBJECT, "fftSize", null), _defineProperty(_AUDIOSOBJECT, "smoothingTimeCnstant", null), _AUDIOSOBJECT);
+  AUDIOSOBJECT.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   AUDIOSOBJECT.audioAnalyser = AUDIOSOBJECT.audioContext.createAnalyser();
   AUDIOSOBJECT.smoothingTimeCnstant = .3;
   AUDIOSOBJECT.fftSize = 1024;
   AUDIOSOBJECT.audioSourceBuffer = AUDIOSOBJECT.audioContext.createBufferSource();
   AUDIOSOBJECT.audioSourceBuffer.connect(AUDIOSOBJECT.audioAnalyser);
-  AUDIOSOBJECT.audioAnalyser.connect(AUDIOSOBJECT.audioContext.destination); // playAudio( song )
+  AUDIOSOBJECT.audioAnalyser.connect(AUDIOSOBJECT.audioContext.destination);
 
-  var icosahedrongeometry = new THREE.IcosahedronGeometry(5, 10);
-  var icosahedronMaterial = new THREE.ShaderMaterial({
-    uniforms: {
-      time: {
-        type: "f",
-        value: 0
-      },
-      noiseStrength: {
-        type: "f",
-        value: 2.0
-      },
-      numOctaves: {
-        type: "f",
-        value: 3
-      },
-      audioScale: {
-        type: "f",
-        value: 1
-      }
-    },
-    vertexShader: _songVertex.default,
-    fragmentShader: _Songfragment.default
-  });
-  var mesh = new THREE.Mesh(icosahedrongeometry, icosahedronMaterial);
-  scene.add(mesh);
-
-  this.update = function (elapsedTime) {
-    icosahedronMaterial.uniforms.time.value = elapsedTime;
-
-    if (AUDIOSOBJECT.buffer != undefined) {
-      var array = new Uint8Array(AUDIOSOBJECT.audioAnalyser.frequencyBitCount);
-      AUDIOSOBJECT.audioAnalyser.getByteFrequencyData(array);
-      var avg = (0, _math.getAverageVolume)(array);
-      var newNoise = (0, _math.mapVolumeToNoiseStrength)(average);
-      icosahedronMaterial.uniforms.noiseStrength.value = newNoise;
-    }
-
-    icosahedronMaterial.needsUpdate; // console.log( AUDIOSOBJECT )
-  };
-
-  function createAndConnectAudioBuffer() {
+  function createandConnectAudioBUffer() {
     // create the source buffer
     AUDIOSOBJECT.audioSourceBuffer = AUDIOSOBJECT.audioContext.createBufferSource(); // connect source and analyser
 
@@ -59456,19 +58853,27 @@ function Sun(scene, time) {
     AUDIOSOBJECT.audioAnalyser.connect(AUDIOSOBJECT.audioContext.destination);
   }
 
-  function playAudio(file) {
-    AUDIOSOBJECT.file = file;
-    console.log(file);
-    createAndConnectAudioBuffer();
-    var fileReader = new FileReader();
+  function handleFileSelect(evt) {
+    var files = evt.target.files;
+    playFile(files[0]);
+  }
 
-    fileReader.onload = function (e) {
-      var fileResult = fileReader.result;
+  function playFile(file) {
+    var freader = new FileReader();
+    AUDIOSOBJECT.audioSourceBuffer = AUDIOSOBJECT.audioContext.createBufferSource(); // connect source and analyser
+
+    AUDIOSOBJECT.audioSourceBuffer.connect(AUDIOSOBJECT.audioAnalyser);
+    AUDIOSOBJECT.audioAnalyser.connect(AUDIOSOBJECT.audioContext.destination);
+
+    freader.onload = function (e) {
+      var fileResult = e.target.result;
+      console.log(fileResult);
       AUDIOSOBJECT.audioContext.decodeAudioData(fileResult, function (buffer) {
         AUDIOSOBJECT.audioSourceBuffer.buffer = buffer;
         AUDIOSOBJECT.audioBuffer = buffer;
         AUDIOSOBJECT.audioSourceBuffer.start();
         AUDIOSOBJECT.audioSourceBuffer.loop = true;
+        console.log(AUDIOSOBJECT);
         (0, _webAudioBeatDetector.analyze)(AUDIOSOBJECT.audioSourceBuffer.buffer).then(function (bpm) {
           // the bpm could be analyzed 
           AUDIOSOBJECT.songBPM = bpm;
@@ -59481,34 +58886,175 @@ function Sun(scene, time) {
       });
     };
 
-    fileReader.readAsArrayBuffer(AUDIOSOBJECT.audioFile);
+    freader.readAsArrayBuffer(file); // freader.readAsDataURL(file)
   }
 
-  function dragenter(e) {
-    e.stopPropagation();
-    e.preventDefault();
-  }
-
-  function dragover(e) {
-    e.stopPropagation();
-    e.preventDefault();
-  }
-
-  function drop(e) {
-    console.log(e);
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (AUDIOSOBJECT.audioFile == undefined) {
-      playAudio(e.dataTransfer.files[0]);
-    } else {
-      // stop current visualization and load new song
-      AUDIOSOBJECT.audioSourceBuffer.stop();
-      playAudio(e.dataTransfer.files[0]);
-    }
-  }
+  document.getElementById('filemp3').addEventListener('change', handleFileSelect, false);
+  return AUDIOSOBJECT;
 }
-},{"simplex-noise":"node_modules/simplex-noise/simplex-noise.js","three":"node_modules/three/build/three.module.js","../assets/song.mp3":"src/assets/song.mp3","../assets/libs/shaders/songVertex.glsl":"src/assets/libs/shaders/songVertex.glsl","../assets/libs/shaders/Songfragment.glsl":"src/assets/libs/shaders/Songfragment.glsl","web-audio-beat-detector":"node_modules/web-audio-beat-detector/build/es2019/module.js","../assets/libs/math":"src/assets/libs/math.js"}],"node_modules/three/examples/jsm/controls/OrbitControls.js":[function(require,module,exports) {
+},{"web-audio-beat-detector":"node_modules/web-audio-beat-detector/build/es2019/module.js","./assets/song.mp3":"src/assets/song.mp3","three":"node_modules/three/build/three.module.js"}],"src/Subjects/PolyTerrain.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = Terrain;
+
+var THREE = _interopRequireWildcard(require("three"));
+
+var _math = require("../assets/libs/math");
+
+var _AudioManager = _interopRequireDefault(require("../AudioManager"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+var COUNT = 10000;
+var PARAMATERS = [[[1, 1, 0.5], 5], [[0.95, 1, 0.5], 4], [[0.90, 1, 0.5], 3], [[0.85, 1, 0.5], 2], [[0.80, 1, 0.5], 1]];
+
+function Terrain(scene) {
+  var particles = [];
+  var materials = [];
+  var geometry = new THREE.BufferGeometry();
+  var positions = [];
+  var color, size;
+
+  for (var i = 0; i < COUNT; i++) {
+    var x = (0, _math.getRandomArbitrary)(-1000, 1000);
+    var y = (0, _math.getRandomArbitrary)(-10, 10);
+    ;
+    var z = (0, _math.getRandomArbitrary)(-1000, 1000); // x < 100 && x > 100 ? x = 100 : x = x;
+    // y < 100 && y > 100 ? y = 10 : y = y;
+    // z < 100 && z > 100 ? z = 100 : z = z;
+
+    positions.push(x, y, z);
+  }
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(positions), 3));
+
+  for (var _i = 0; _i < PARAMATERS.length; _i++) {
+    color = PARAMATERS[_i][0];
+    size = PARAMATERS[_i][1];
+    materials[_i] = new THREE.PointsMaterial({
+      size: size
+    });
+    particles = new THREE.Points(geometry, materials[_i]);
+    particles.rotation.x = Math.random() * 6;
+    particles.rotation.y = Math.random() * 6;
+    particles.rotation.z = Math.random() * 6;
+    scene.add(particles);
+  }
+
+  var AUDIOSOBJECT = new _AudioManager.default();
+
+  this.update = function () {
+    var time = Date.now() * 0.00005;
+
+    for (var i = 0; i < materials.length; i++) {
+      color = PARAMATERS[i][0];
+      var h = color[0] + time * 2;
+      materials[i].color.setHSL(h, color[1], color[2]);
+    }
+
+    if (AUDIOSOBJECT.audioSourceBuffer.buffer != undefined) {
+      var array = new Uint8Array(AUDIOSOBJECT.audioAnalyser.frequencyBinCount);
+      AUDIOSOBJECT.audioAnalyser.getByteFrequencyData(array);
+
+      for (var i = 0; i < scene.children.length; i++) {
+        var object = scene.children[i];
+
+        if (object instanceof THREE.Points) {
+          object.rotation.y = time * (i < 4 ? i + 1 : -(i + 1));
+          var offset;
+
+          if (offset < 100) {
+            offset = 1;
+          } else {
+            offset = (0, _math.getAverageVolume)(array) / 100;
+          }
+
+          object.scale.set(offset, offset, offset);
+        }
+      }
+    }
+  };
+}
+},{"three":"node_modules/three/build/three.module.js","../assets/libs/math":"src/assets/libs/math.js","../AudioManager":"src/AudioManager.js"}],"src/assets/libs/shaders/song/songVertex.glsl":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying float vNoise;\nuniform int numOctaves;\nuniform float time;\nuniform float noiseStrength;\nuniform float audioScale;\nconst int aLargeNumber = 10;\n\nfloat generateNoise(int x, int y, int z, int numOctave) {\n  if(numOctave == 0) {\n    return fract(sin(dot(vec3(x, y, z), vec3(12.9898, 78.23, 107.81))) * 43758.5453);\n  } else if(numOctave == 1) {\n    return fract(sin(dot(vec3(z, x, y), vec3(16.363, 43.597, 199.73))) * 69484.7539);\n  } else if(numOctave == 2) {\n    return fract(sin(dot(vec3(y, x, z), vec3(13.0, 68.819, 90.989))) * 92041.9823);\n  } else if(numOctave == 3) {\n    return fract(sin(dot(vec3(x, y, z), vec3(98.1577, 47.45029, 154.85161))) * 84499.0);\n  } else if(numOctave == 4) {\n    return fract(sin(dot(vec3(z, x, y), vec3(9.75367, 83.3057, 390.353))) * 15485.653);\n  }\n}\n\nfloat linearInterpolate(float a, float b, float t) {\n  return a * (1.0 - t) + b * t;\n}\n\nfloat cosineInterpolate(float a, float b, float t) {\n  float cos_t = (1.0 - cos(t * 3.14159265359879323846264)) * 0.5;\n  return linearInterpolate(a, b, cos_t);\n}\n\n// given a point in 3d space, produces a noise value by interpolating surrounding points\nfloat interpolateNoise(float x, float y, float z, int numOctave) {\n  int integerX = int(floor(x));\n  float weightX = x - float(integerX);\n\n  int integerY = int(floor(y));\n  float weightY = y - float(integerY);\n\n  int integerZ = int(floor(z));\n  float weightZ = z - float(integerZ);\n\n  float v1 = generateNoise(integerX, integerY, integerZ, numOctave);\n  float v2 = generateNoise(integerX, integerY, integerZ + 1, numOctave);\n  float v3 = generateNoise(integerX, integerY + 1, integerZ + 1, numOctave);\n  float v4 = generateNoise(integerX, integerY + 1, integerZ, numOctave);\n\n  float v5 = generateNoise(integerX + 1, integerY, integerZ, numOctave);\n  float v6 = generateNoise(integerX + 1, integerY, integerZ + 1, numOctave);\n  float v7 = generateNoise(integerX + 1, integerY + 1, integerZ + 1, numOctave);\n  float v8 = generateNoise(integerX + 1, integerY + 1, integerZ, numOctave);\n\n  float i1 = cosineInterpolate(v1, v5, weightX);\n  float i2 = cosineInterpolate(v2, v6, weightX);\n  float i3 = cosineInterpolate(v3, v7, weightX);\n  float i4 = cosineInterpolate(v4, v8, weightX);\n\n  float ii1 = cosineInterpolate(i1, i4, weightY);\n  float ii2 = cosineInterpolate(i2, i3, weightY);\n\n  return cosineInterpolate(ii1, ii2, weightZ);\n}\n\n// a multi-octave noise generation function that sums multiple noise functions together\n// with each subsequent noise function increasing in frequency and decreasing in amplitude\nfloat generateMultiOctaveNoise(float x, float y, float z) {\n  float total = 0.0;\n  float persistence = 1.0 / noiseStrength;\n\n    //loop for some number of octaves\n  for(int i = 0; i < aLargeNumber; i++) {\n    if(i == numOctaves)\n      break;\n    float frequency = pow(2.0, float(i));\n    float amplitude = pow(persistence, float(i));\n\n    total += interpolateNoise(x * frequency, y * frequency, z * frequency, i) * amplitude;\n  }\n\n  return total;\n}\n\nvoid main() {\n  float offset = generateMultiOctaveNoise(position[0] + time / 999.0, position[1] + time / 999.0, position[2] + time / 999.0);\n  vec3 newPosition = position + offset * normal * audioScale;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  vUv = uv;\n  vNormal = normal;\n  vNoise = offset;\n}";
+},{}],"src/assets/libs/shaders/song/Songfragment.glsl":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\n// varying vec2 vUv;\n// varying float vNoise;\n// varying vec3 vNormal;\n\n// float linearInterpolate(float a, float b, float t) {\n//   return a * (1.0 - t) + b * t;\n// }\n\n// void main() {\n//   float r = linearInterpolate(0.0, 0.9, vNoise);\n//   float g = linearInterpolate(0.0, 0.9, vNoise);\n//   float b = linearInterpolate(0.0, 0.9, vNoise);\n\n//     // gl_FragColor = vec4(r, g, b, 1.0);\n//   gl_FragColor = vec4(vUv.x, 1.0, vUv.y, 1.0);\n// }\n\nuniform float time;\nuniform vec2 uResolution;\n\nfloat colormap_red(float x) {\n  if(x < 0.0) {\n    return 54.0 / 255.0;\n  } else if(x < 20049.0 / 82979.0) {\n    return (829.79 * x + 54.51) / 255.0;\n  } else {\n    return 1.0;\n  }\n}\n\nfloat colormap_green(float x) {\n  if(x < 20049.0 / 82979.0) {\n    return 0.0;\n  } else if(x < 327013.0 / 810990.0) {\n    return (8546482679670.0 / 10875673217.0 * x - 2064961390770.0 / 10875673217.0) / 255.0;\n  } else if(x <= 1.0) {\n    return (103806720.0 / 483977.0 * x + 19607415.0 / 483977.0) / 255.0;\n  } else {\n    return 1.0;\n  }\n}\n\nfloat colormap_blue(float x) {\n  if(x < 0.0) {\n    return 54.0 / 255.0;\n  } else if(x < 7249.0 / 82979.0) {\n    return (829.79 * x + 54.51) / 255.0;\n  } else if(x < 20049.0 / 82979.0) {\n    return 127.0 / 255.0;\n  } else if(x < 327013.0 / 810990.0) {\n    return (792.02249341361393720147485376583 * x - 64.364790735602331034989206222672) / 255.0;\n  } else {\n    return 1.0;\n  }\n}\n\nvec4 colormap(float x) {\n  return vec4(colormap_red(x), colormap_green(x), colormap_blue(x), 1.0);\n}\n\nfloat rand(vec2 n) {\n  return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);\n}\n\nfloat noise(vec2 p) {\n  vec2 ip = floor(p);\n  vec2 u = fract(p);\n  u = u * u * (3.0 - 2.0 * u);\n\n  float res = mix(mix(rand(ip), rand(ip + vec2(1.0, 0.0)), u.x), mix(rand(ip + vec2(0.0, 1.0)), rand(ip + vec2(1.0, 1.0)), u.x), u.y);\n  return res * res;\n}\n\nconst mat2 mtx = mat2(0.80, 0.60, -0.60, 0.80);\n\nfloat fbm(vec2 p) {\n  float f = 0.0;\n\n  f += 0.500000 * noise(p + time / 1000.);\n  p = mtx * p * 2.02;\n  f += 0.031250 * noise(p);\n  p = mtx * p * 2.01;\n  f += 0.250000 * noise(p);\n  p = mtx * p * 2.03;\n  f += 0.125000 * noise(p);\n  p = mtx * p * 2.01;\n  f += 0.062500 * noise(p);\n  p = mtx * p * 2.04;\n  f += 0.015625 * noise(p + sin(time));\n\n  return f / 0.96875;\n}\n\nfloat pattern(in vec2 p) {\n  return fbm(p + fbm(p + fbm(p)));\n}\n\nvoid main() {\n  vec2 fragCoord = gl_FragCoord.xy;\n  vec2 uv = fragCoord / uResolution.xy;\n  float shade = pattern(uv);\n  gl_FragColor = vec4(colormap(shade).rgb, shade);\n}\n";
+},{}],"src/Subjects/Sun.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = Sun;
+
+var THREE = _interopRequireWildcard(require("three"));
+
+var _songVertex = _interopRequireDefault(require("../assets/libs/shaders/song/songVertex.glsl"));
+
+var _Songfragment = _interopRequireDefault(require("../assets/libs/shaders/song/Songfragment.glsl"));
+
+var _math = require("../assets/libs/math");
+
+var _AudioManager = _interopRequireDefault(require("../AudioManager"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function Sun(scene) {
+  var programStartTime = Date.now();
+  var icosahedrongeometry = new THREE.IcosahedronGeometry(5, 8);
+  var icosahedronMaterial = new THREE.ShaderMaterial({
+    wireframe: false,
+    uniforms: {
+      uResolution: {
+        value: new THREE.Vector2(window.innerWidth, window.innerHeight)
+      },
+      time: {
+        value: Date.now()
+      },
+      noiseStrength: {
+        value: 2.0
+      },
+      numOctaves: {
+        value: 3.0
+      },
+      audioScale: {
+        value: 1.0
+      }
+    },
+    vertexShader: _songVertex.default,
+    fragmentShader: _Songfragment.default
+  });
+  var mesh = new THREE.Mesh(icosahedrongeometry, icosahedronMaterial);
+  mesh.scale.set(10, 10, 10);
+  scene.add(mesh);
+  var AUDIOSOBJECT = new _AudioManager.default();
+
+  this.update = function () {
+    icosahedronMaterial.uniforms.time.value = Date.now() - programStartTime;
+
+    if (AUDIOSOBJECT.audioBuffer != undefined) {
+      var array = new Uint8Array(AUDIOSOBJECT.audioAnalyser.frequencyBinCount);
+      AUDIOSOBJECT.audioAnalyser.getByteFrequencyData(array);
+      var average = (0, _math.getAverageVolume)(array);
+      var newNoise = (0, _math.mapVolumeToNoiseStrength)(average);
+      icosahedronMaterial.uniforms.noiseStrength.value = newNoise * .3;
+    }
+
+    icosahedronMaterial.needsUpdate;
+  };
+}
+},{"three":"node_modules/three/build/three.module.js","../assets/libs/shaders/song/songVertex.glsl":"src/assets/libs/shaders/song/songVertex.glsl","../assets/libs/shaders/song/Songfragment.glsl":"src/assets/libs/shaders/song/Songfragment.glsl","../assets/libs/math":"src/assets/libs/math.js","../AudioManager":"src/AudioManager.js"}],"node_modules/three/examples/jsm/controls/OrbitControls.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -60371,8 +59917,6 @@ exports.default = SceneManager;
 
 var _GeneralLights = _interopRequireDefault(require("./Subjects/GeneralLights"));
 
-var _SceneSubject = _interopRequireDefault(require("./Subjects/SceneSubject"));
-
 var _PolyTerrain = _interopRequireDefault(require("./Subjects/PolyTerrain"));
 
 var _Sun = _interopRequireDefault(require("./Subjects/Sun"));
@@ -60382,6 +59926,8 @@ var _OrbitControls = require("three/examples/jsm/controls/OrbitControls");
 var THREE = _interopRequireWildcard(require("three"));
 
 var _stats = _interopRequireDefault(require("stats.js"));
+
+var _AudioManager = _interopRequireDefault(require("./AudioManager"));
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
@@ -60429,14 +59975,14 @@ function SceneManager(canvas) {
     var aspectRatio = width / height;
     var fieldOfView = 60;
     var nearPlane = .01;
-    var farPlane = 1000;
+    var farPlane = 10000;
     var camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
-    camera.position.set(0, 40, 10);
+    camera.position.set(0, 100, 100);
     return camera;
   }
 
   function createSceneSubjects(scene) {
-    var sceneSubjects = [new _GeneralLights.default(scene), new _SceneSubject.default(scene), new _PolyTerrain.default(scene), new _Sun.default(scene)];
+    var sceneSubjects = [new _GeneralLights.default(scene), new _PolyTerrain.default(scene), new _Sun.default(scene)];
     return sceneSubjects;
   }
 
@@ -60463,7 +60009,7 @@ function SceneManager(canvas) {
     renderer.setSize(width, height);
   };
 }
-},{"./Subjects/GeneralLights":"src/Subjects/GeneralLights.js","./Subjects/SceneSubject":"src/Subjects/SceneSubject.js","./Subjects/PolyTerrain":"src/Subjects/PolyTerrain.js","./Subjects/Sun":"src/Subjects/Sun.js","three/examples/jsm/controls/OrbitControls":"node_modules/three/examples/jsm/controls/OrbitControls.js","three":"node_modules/three/build/three.module.js","stats.js":"node_modules/stats.js/build/stats.min.js"}],"src/App.js":[function(require,module,exports) {
+},{"./Subjects/GeneralLights":"src/Subjects/GeneralLights.js","./Subjects/PolyTerrain":"src/Subjects/PolyTerrain.js","./Subjects/Sun":"src/Subjects/Sun.js","three/examples/jsm/controls/OrbitControls":"node_modules/three/examples/jsm/controls/OrbitControls.js","three":"node_modules/three/build/three.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./AudioManager":"src/AudioManager.js"}],"src/App.js":[function(require,module,exports) {
 "use strict";
 
 var _SceneManager = _interopRequireDefault(require("./SceneManager.js"));
@@ -60520,7 +60066,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53377" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57558" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

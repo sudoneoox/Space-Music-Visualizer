@@ -62,5 +62,4 @@ export function mapVolumeToNoiseStrength( vol )
     return result;
 }
 
-export const PI = 3.14159265
 export const e = 2.7181718

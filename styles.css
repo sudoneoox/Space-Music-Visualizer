@@ -16,9 +16,9 @@ body {
     image-rendering: pixelated;
 }
 
-#debugCanvas {
+#filemp3 {
     position: fixed;
-    top: 0;
+    bottom: 0;
     left: 0;
     width: 100px;
     height: 100px;
