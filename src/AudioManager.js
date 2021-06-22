@@ -73,11 +73,14 @@ export default function AudioManager( )
             }, function( e ) { "Error with decoding audio data" + e.err; } );
         };
         freader.readAsArrayBuffer( file );
-        // freader.readAsDataURL(file)
+        const texttochange = document.querySelector( '#top' );
+        texttochange.innerHTML = 'Press H for even more fun!'
+        const fileinput = document.querySelector( '#filemp3' )
+        fileinput.style.visibility = "hidden";
+        texttochange.style.top = "96.5%"
     }
 
     document.getElementById( 'filemp3' ).addEventListener( 'change', handleFileSelect, false );
-
 
 
 

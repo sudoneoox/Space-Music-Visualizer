@@ -4,7 +4,7 @@ import { getRandomArbitrary } from '../assets/libs/math';
 import AudioManager from '../AudioManager';
 import { getAverageVolume, mapVolumeToNoiseStrength, } from '../assets/libs/math';
 
-const COUNT = 1000;
+const COUNT = 2500;
 const PARAMATERS = [
     [
         [ 1, 1, 0.5 ], 5
@@ -24,7 +24,6 @@ const PARAMATERS = [
 ]
 export default function SunCorona( scene )
 {
-
     let particles = [ ];
     let materials = [ ];
     const geometry = new THREE.BufferGeometry( );
@@ -45,7 +44,7 @@ export default function SunCorona( scene )
     {
         color = PARAMATERS[ i ][ 0 ];
         size = PARAMATERS[ i ][ 1 ];
-        materials[ i ] = new THREE.PointsMaterial( { size: size, color: "#ffff00" } );
+        materials[ i ] = new THREE.PointsMaterial( { size: size, color: "#ffff00", transparent: true } );
         particles = new THREE.Points( geometry, materials[ i ] );
         particles.rotation.x = Math.random( ) * 6;
         particles.rotation.y = Math.random( ) * 6;

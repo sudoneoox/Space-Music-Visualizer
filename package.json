@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "av": "^0.4.9",
+        "dat.gui": "^0.7.7",
         "stats.js": "^0.17.0",
         "three": "^0.129.0",
         "web-audio-beat-detector": "^8.1.13"

@@ -35,11 +35,13 @@ p {
     position: fixed;
     bottom: 0;
     left: 0;
+    text-decoration-color: white;
 }
 
 #top {
+    color: white;
     position: fixed;
-    top: 92.5%;
+    top: 93.5%;
     left: 0;
 }
 

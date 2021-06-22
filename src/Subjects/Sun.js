@@ -1,14 +1,18 @@
 import * as THREE from 'three'
-
 import vertex from '../assets/libs/shaders/song/songVertex.glsl'
 import fragment from '../assets/libs/shaders/song/Songfragment.glsl'
-
 import { getAverageVolume, mapVolumeToNoiseStrength, } from '../assets/libs/math';
-
 import AudioManager from '../AudioManager';
 
-export default function Sun( scene )
+
+export default function Sun( scene, gui )
 {
+    const multiplier = {
+        value: .25,
+    }
+    const sun = gui.addFolder( 'SUN' )
+    sun.add( multiplier, 'value' ).min( .1 ).max( .6 ).step( .001 ).name( 'SoundMultiplier' )
+
     const programStartTime = Date.now( );
     const icosahedrongeometry = new THREE.IcosahedronGeometry( 5, 8 );
     const icosahedronMaterial = new THREE.ShaderMaterial(
@@ -40,7 +44,7 @@ export default function Sun( scene )
             AUDIOSOBJECT.audioAnalyser.getByteFrequencyData( array );
             const average = getAverageVolume( array );
             const newNoise = mapVolumeToNoiseStrength( average );
-            icosahedronMaterial.uniforms.noiseStrength.value = newNoise * .3;
+            icosahedronMaterial.uniforms.noiseStrength.value = newNoise * multiplier.value;
         }
         icosahedronMaterial.needsUpdate;
     }
