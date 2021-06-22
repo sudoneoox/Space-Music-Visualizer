@@ -36304,30 +36304,7 @@ if (typeof window !== 'undefined') {
     window.__THREE__ = REVISION;
   }
 }
-},{}],"src/Subjects/GeneralLights.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = GeneralLights;
-
-var _three = require("three");
-
-function GeneralLights(scene) {
-  // color 2222ff
-  var pointLight = new _three.PointLight("#ffffff", 1);
-  pointLight.position.set(0, 40, 0);
-  var ambientLight = new _three.AmbientLight('#ffff00', .1);
-  scene.add(ambientLight);
-  scene.add(pointLight);
-
-  this.update = function (time) {
-    pointLight.intensity = (Math.sin(time) + 1.5) / 1.5;
-    pointLight.color.setHSL(Math.sin(time), 0.5, 0.5);
-  };
-}
-},{"three":"node_modules/three/build/three.module.js"}],"src/assets/libs/math.js":[function(require,module,exports) {
+},{}],"src/assets/libs/math.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -58805,9 +58782,7 @@ exports.analyze = analyze;
 const guess = webAudioBeatDetector.guess;
 exports.guess = guess;
 URL.revokeObjectURL(url);
-},{"web-audio-beat-detector-broker":"node_modules/web-audio-beat-detector-broker/build/es2019/module.js","./worker/worker":"node_modules/web-audio-beat-detector/build/es2019/worker/worker.js"}],"src/assets/song.mp3":[function(require,module,exports) {
-module.exports = "/song.6842c2fc.mp3";
-},{}],"src/AudioManager.js":[function(require,module,exports) {
+},{"web-audio-beat-detector-broker":"node_modules/web-audio-beat-detector-broker/build/es2019/module.js","./worker/worker":"node_modules/web-audio-beat-detector/build/es2019/worker/worker.js"}],"src/AudioManager.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -58816,12 +58791,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = AudioManager;
 
 var _webAudioBeatDetector = require("web-audio-beat-detector");
-
-var _song = _interopRequireDefault(require("./assets/song.mp3"));
-
-var _three = require("three");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -58892,13 +58861,13 @@ function AudioManager() {
   document.getElementById('filemp3').addEventListener('change', handleFileSelect, false);
   return AUDIOSOBJECT;
 }
-},{"web-audio-beat-detector":"node_modules/web-audio-beat-detector/build/es2019/module.js","./assets/song.mp3":"src/assets/song.mp3","three":"node_modules/three/build/three.module.js"}],"src/Subjects/PolyTerrain.js":[function(require,module,exports) {
+},{"web-audio-beat-detector":"node_modules/web-audio-beat-detector/build/es2019/module.js"}],"src/Subjects/SunCorona.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = Terrain;
+exports.default = SunCorona;
 
 var THREE = _interopRequireWildcard(require("three"));
 
@@ -58912,10 +58881,10 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-var COUNT = 10000;
+var COUNT = 1000;
 var PARAMATERS = [[[1, 1, 0.5], 5], [[0.95, 1, 0.5], 4], [[0.90, 1, 0.5], 3], [[0.85, 1, 0.5], 2], [[0.80, 1, 0.5], 1]];
 
-function Terrain(scene) {
+function SunCorona(scene) {
   var particles = [];
   var materials = [];
   var geometry = new THREE.BufferGeometry();
@@ -58923,13 +58892,10 @@ function Terrain(scene) {
   var color, size;
 
   for (var i = 0; i < COUNT; i++) {
-    var x = (0, _math.getRandomArbitrary)(-1000, 1000);
-    var y = (0, _math.getRandomArbitrary)(-10, 10);
+    var x = (0, _math.getRandomArbitrary)(-100, 100);
+    var y = (0, _math.getRandomArbitrary)(-100, 100);
     ;
-    var z = (0, _math.getRandomArbitrary)(-1000, 1000); // x < 100 && x > 100 ? x = 100 : x = x;
-    // y < 100 && y > 100 ? y = 10 : y = y;
-    // z < 100 && z > 100 ? z = 100 : z = z;
-
+    var z = (0, _math.getRandomArbitrary)(-100, 100);
     positions.push(x, y, z);
   }
 
@@ -58939,7 +58905,8 @@ function Terrain(scene) {
     color = PARAMATERS[_i][0];
     size = PARAMATERS[_i][1];
     materials[_i] = new THREE.PointsMaterial({
-      size: size
+      size: size,
+      color: "#ffff00"
     });
     particles = new THREE.Points(geometry, materials[_i]);
     particles.rotation.x = Math.random() * 6;
@@ -58950,34 +58917,25 @@ function Terrain(scene) {
 
   var AUDIOSOBJECT = new _AudioManager.default();
 
-  this.update = function () {
-    var time = Date.now() * 0.00005;
-
-    for (var i = 0; i < materials.length; i++) {
-      color = PARAMATERS[i][0];
-      var h = color[0] + time * 2;
-      materials[i].color.setHSL(h, color[1], color[2]);
-    }
+  this.update = function (elapsedTime) {
+    var time = elapsedTime;
 
     if (AUDIOSOBJECT.audioSourceBuffer.buffer != undefined) {
       var array = new Uint8Array(AUDIOSOBJECT.audioAnalyser.frequencyBinCount);
       AUDIOSOBJECT.audioAnalyser.getByteFrequencyData(array);
 
-      for (var i = 0; i < scene.children.length; i++) {
+      for (var i = 0; i < materials.length; i++) {
         var object = scene.children[i];
 
         if (object instanceof THREE.Points) {
           object.rotation.y = time * (i < 4 ? i + 1 : -(i + 1));
-          var offset;
-
-          if (offset < 100) {
-            offset = 1;
-          } else {
-            offset = (0, _math.getAverageVolume)(array) / 100;
-          }
-
+          var offset = (0, _math.getAverageVolume)(array) / 100 + 1;
           object.scale.set(offset, offset, offset);
         }
+
+        color = PARAMATERS[i][0];
+        var h = color[0] + time * 2;
+        materials[i].color.setHSL(h, color[1], color[2]);
       }
     }
   };
@@ -59915,9 +59873,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = SceneManager;
 
-var _GeneralLights = _interopRequireDefault(require("./Subjects/GeneralLights"));
-
-var _PolyTerrain = _interopRequireDefault(require("./Subjects/PolyTerrain"));
+var _SunCorona = _interopRequireDefault(require("./Subjects/SunCorona"));
 
 var _Sun = _interopRequireDefault(require("./Subjects/Sun"));
 
@@ -59926,8 +59882,6 @@ var _OrbitControls = require("three/examples/jsm/controls/OrbitControls");
 var THREE = _interopRequireWildcard(require("three"));
 
 var _stats = _interopRequireDefault(require("stats.js"));
-
-var _AudioManager = _interopRequireDefault(require("./AudioManager"));
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
@@ -59977,12 +59931,12 @@ function SceneManager(canvas) {
     var nearPlane = .01;
     var farPlane = 10000;
     var camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
-    camera.position.set(0, 100, 100);
+    camera.position.set(0, 500, 500);
     return camera;
   }
 
   function createSceneSubjects(scene) {
-    var sceneSubjects = [new _GeneralLights.default(scene), new _PolyTerrain.default(scene), new _Sun.default(scene)];
+    var sceneSubjects = [new _SunCorona.default(scene), new _Sun.default(scene)];
     return sceneSubjects;
   }
 
@@ -59994,6 +59948,8 @@ function SceneManager(canvas) {
       sceneSubjects[i].update(elapsedTime);
     }
 
+    camera.position.x += Math.sin(elapsedTime) * 4;
+    camera.position.z += Math.cos(elapsedTime) * 4;
     controls.update();
     renderer.render(scene, camera);
     stats.end();
@@ -60009,7 +59965,7 @@ function SceneManager(canvas) {
     renderer.setSize(width, height);
   };
 }
-},{"./Subjects/GeneralLights":"src/Subjects/GeneralLights.js","./Subjects/PolyTerrain":"src/Subjects/PolyTerrain.js","./Subjects/Sun":"src/Subjects/Sun.js","three/examples/jsm/controls/OrbitControls":"node_modules/three/examples/jsm/controls/OrbitControls.js","three":"node_modules/three/build/three.module.js","stats.js":"node_modules/stats.js/build/stats.min.js","./AudioManager":"src/AudioManager.js"}],"src/App.js":[function(require,module,exports) {
+},{"./Subjects/SunCorona":"src/Subjects/SunCorona.js","./Subjects/Sun":"src/Subjects/Sun.js","three/examples/jsm/controls/OrbitControls":"node_modules/three/examples/jsm/controls/OrbitControls.js","three":"node_modules/three/build/three.module.js","stats.js":"node_modules/stats.js/build/stats.min.js"}],"src/App.js":[function(require,module,exports) {
 "use strict";
 
 var _SceneManager = _interopRequireDefault(require("./SceneManager.js"));
@@ -60066,7 +60022,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57558" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63362" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -1,6 +1,4 @@
 import { analyze } from 'web-audio-beat-detector';
-import song from './assets/song.mp3'
-import { AudioLoader, Audio, AudioListener, AudioAnalyser } from 'three';
 export default function AudioManager( )
 {
     const AUDIOSOBJECT = {
@@ -77,7 +75,10 @@ export default function AudioManager( )
         freader.readAsArrayBuffer( file );
         // freader.readAsDataURL(file)
     }
+
     document.getElementById( 'filemp3' ).addEventListener( 'change', handleFileSelect, false );
+
+
 
 
     return AUDIOSOBJECT;

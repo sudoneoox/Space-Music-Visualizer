@@ -1,11 +1,9 @@
-import GeneralLights from "./Subjects/GeneralLights";
-import Terrain from "./Subjects/PolyTerrain";
+import SunCorona from "./Subjects/SunCorona";
 import Sun from './Subjects/Sun'
-
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as THREE from 'three'
 import Stats from "stats.js";
-import AudioManager from "./AudioManager";
+
 
 export default function SceneManager( canvas )
 {
@@ -23,6 +21,7 @@ export default function SceneManager( canvas )
     const controls = new OrbitControls( camera, canvas )
     const sceneSubjects = createSceneSubjects( scene );
     const stats = new Stats( );
+
 
     document.body.appendChild( stats.dom )
 
@@ -51,7 +50,7 @@ export default function SceneManager( canvas )
         const nearPlane = .01;
         const farPlane = 10000;
         const camera = new THREE.PerspectiveCamera( fieldOfView, aspectRatio, nearPlane, farPlane );
-        camera.position.set( 0, 100, 100 )
+        camera.position.set( 0, 500, 500 )
 
         return camera;
     }
@@ -59,11 +58,9 @@ export default function SceneManager( canvas )
     function createSceneSubjects( scene )
     {
         const sceneSubjects = [
-            new GeneralLights( scene ),
-            new Terrain( scene ),
+            new SunCorona( scene ),
             new Sun( scene )
         ];
-
         return sceneSubjects;
     }
 
@@ -73,8 +70,11 @@ export default function SceneManager( canvas )
         const elapsedTime = clock.getElapsedTime( );
 
         for ( let i = 0; i < sceneSubjects.length; i++ )
+        {
             sceneSubjects[ i ].update( elapsedTime );
-
+        }
+        camera.position.x += Math.sin( elapsedTime ) * 4;
+        camera.position.z += Math.cos( elapsedTime ) * 4;
         controls.update( )
         renderer.render( scene, camera );
         stats.end( )

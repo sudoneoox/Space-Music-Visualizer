@@ -16,11 +16,7 @@
         "parcel-bundler": "^1.12.5"
     },
     "dependencies": {
-        "audio-decode": "^1.4.0",
-        "audio-lena": "^2.1.1",
         "av": "^0.4.9",
-        "flac.js": "^0.2.1",
-        "simplex-noise": "^2.4.0",
         "stats.js": "^0.17.0",
         "three": "^0.129.0",
         "web-audio-beat-detector": "^8.1.13"

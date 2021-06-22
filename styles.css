@@ -20,7 +20,25 @@ body {
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 100px;
+    width: 500px;
     height: 100px;
-    image-rendering: pixelated;
+    font-size: 1.25em;
+    font-weight: 700;
+    color: white;
+    background-color: black;
+    display: inline-block;
+    text-decoration-color: black;
+    margin-bottom: -50px;
+}
+
+p {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}
+
+#top {
+    position: fixed;
+    top: 92.5%;
+    left: 0;
 }

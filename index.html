@@ -5,15 +5,16 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Sun Audio Visualizer</title>
     <link rel="stylesheet" href="./styles.css">
 </head>
 
 <body>
     <canvas id="webgl"></canvas>
     <canvas id="debugCanvas" width="50" height="50"></canvas>
-    <input type="file" id="filemp3" accept="audio/*" name="files[]">
-    <a id="song" href="https://www.computerhope.com/jargon/m/example.mp3">Play sound file</a>
+    <p id="top">Upload an MP3 file for security reasons they didn't allow me to read a file locally </p>
+    <input type="file" id="filemp3" name="files[]" placeholder="upload MP3">
+    <p>I recommend putting <a href="https://www.youtube.com/watch?v=nnEl6MzC080">BADBADNOTGOOD</a> 🙂</p>
     <script src=" ./src/App.js"> </script>
 </body>
 
