@@ -1,37 +1,38 @@
+import * as THREE from 'three'
+import Stats from "stats.js";
+import * as dat from 'dat.gui'
 import SunCorona from "./Subjects/SunCorona";
 import Sun from './Subjects/Sun'
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { AfterimagePass } from 'three/examples/jsm/postprocessing/AfterimagePass.js';
-import * as THREE from 'three'
-import Stats from "stats.js";
-import * as dat from 'dat.gui'
 import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass';
 import { DotScreenPass } from 'three/examples/jsm/postprocessing/DotScreenPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { RGBShiftShader } from 'three/examples/jsm/shaders/RGBShiftShader.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-
+import px from './assets/textures/px.jpg'
+import nx from './assets/textures/nx.jpg'
+import py from './assets/textures/py.jpg'
+import ny from './assets/textures/ny.jpg'
+import pz from './assets/textures/pz.jpg'
+import nz from './assets/textures/nz.jpg'
+import AudioManager from './AudioManager';
 
 export default function SceneManager( canvas )
 {
-
     const clock = new THREE.Clock( );
-
     const screenDimensions = {
         width: canvas.width,
         height: canvas.height
     };
-
-
-
     const scene = buildScene( );
+
     const renderer = buildRender( screenDimensions );
     const camera = buildCamera( screenDimensions );
     const controls = new OrbitControls( camera, canvas );
     controls.enableDamping = true;
-    // Components the scene has to take care of
 
 
     // Post Processing
@@ -66,13 +67,15 @@ export default function SceneManager( canvas )
 
     const glitchPass = new GlitchPass( )
     glitchPass.enabled = false
+    composer.addPass( glitchPass )
+
     const afterImage = new AfterimagePass( )
     composer.addPass( afterImage );
     afterImage.enabled = false
     afterImage.uniforms[ 'damp' ].value = .7;
 
     const unrealBloomPass = new UnrealBloomPass( )
-    unrealBloomPass.strength = 1.5;
+    unrealBloomPass.strength = 1.2;
     unrealBloomPass.radius = 0;
     unrealBloomPass.threshold = 0;
     unrealBloomPass.exposure = 1;
@@ -95,7 +98,11 @@ export default function SceneManager( canvas )
 
     // GUI
     const gui = buildGui( );
-    const sceneSubjects = createSceneSubjects( scene, gui );
+
+    // Audio Manager
+    const audioManager = new AudioManager( );
+    // Components the scene has to take care of
+    const sceneSubjects = createSceneSubjects( scene, gui, audioManager );
 
     function buildGui( )
     {
@@ -122,12 +129,6 @@ export default function SceneManager( canvas )
 
         const glitchpassFolder = gui.addFolder( 'GLITCHPASS' )
         glitchpassFolder.add( glitchPass, 'enabled' ).name( 'GLITCHPASS' )
-        glitchpassFolder.add( glitchPass.uniforms.amount, 'value' ).min( 0 ).max( 2 ).step( .001 ).name( 'amount' )
-        glitchpassFolder.add( glitchPass.uniforms.angle, 'value' ).min( 0 ).max( 2 ).step( .001 ).name( 'angle' )
-        glitchpassFolder.add( glitchPass.uniforms.byp, 'value' ).min( 0 ).max( 2 ).step( .001 ).name( 'byp' )
-        glitchpassFolder.add( glitchPass.uniforms.col_s, 'value' ).min( 0 ).max( 2 ).step( .001 ).name( 'col_s' )
-        glitchpassFolder.add( glitchPass.uniforms.distortion_x, 'value' ).min( 0 ).max( 2 ).step( .001 ).name( 'distortion_x' )
-        glitchpassFolder.add( glitchPass.uniforms.distortion_y, 'value' ).min( 0 ).max( 2 ).step( .001 ).name( 'distortion_y' )
         glitchpassFolder.add( glitchPass, 'goWild' ).name( 'goWild' )
         glitchpassFolder.close( );
 
@@ -143,8 +144,14 @@ export default function SceneManager( canvas )
     function buildScene( )
     {
         const scene = new THREE.Scene( );
-        scene.background = new THREE.Color( "#000" );
 
+        const cubeTextureLoader = new THREE.CubeTextureLoader( )
+        const environmentMap = cubeTextureLoader.load( [ px, nx, py, ny, pz, nz ],
+            ( ) => console.log( 'worked' ), ( ) => console.log( 'working on it' ), ( e ) => console.log( 'error', e ) )
+
+        environmentMap.encoding = THREE.sRGBEncoding;
+        scene.background = environmentMap
+        scene.environment = environmentMap
         return scene;
     }
 
@@ -173,11 +180,11 @@ export default function SceneManager( canvas )
         return camera;
     }
 
-    function createSceneSubjects( scene, gui )
+    function createSceneSubjects( scene, gui, audioManager )
     {
         const sceneSubjects = [
-            new SunCorona( scene ),
-            new Sun( scene, gui )
+            new SunCorona( scene, audioManager ),
+            new Sun( scene, gui, audioManager )
         ];
         return sceneSubjects;
     }

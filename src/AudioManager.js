@@ -26,15 +26,6 @@ export default function AudioManager( )
     AUDIOSOBJECT.audioSourceBuffer.connect( AUDIOSOBJECT.audioAnalyser );
     AUDIOSOBJECT.audioAnalyser.connect( AUDIOSOBJECT.audioContext.destination );
 
-    function createandConnectAudioBUffer( )
-    {
-        // create the source buffer
-        AUDIOSOBJECT.audioSourceBuffer = AUDIOSOBJECT.audioContext.createBufferSource( );
-        // connect source and analyser
-        AUDIOSOBJECT.audioSourceBuffer.connect( AUDIOSOBJECT.audioAnalyser );
-        AUDIOSOBJECT.audioAnalyser.connect( AUDIOSOBJECT.audioContext.destination );
-    }
-
     function handleFileSelect( evt )
     {
         let files = evt.target.files
@@ -81,8 +72,5 @@ export default function AudioManager( )
     }
 
     document.getElementById( 'filemp3' ).addEventListener( 'change', handleFileSelect, false );
-
-
-
     return AUDIOSOBJECT;
 }

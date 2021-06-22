@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 import { Float32BufferAttribute } from 'three';
 import { getRandomArbitrary } from '../assets/libs/math';
-import AudioManager from '../AudioManager';
-import { getAverageVolume, mapVolumeToNoiseStrength, } from '../assets/libs/math';
+import { getAverageVolume, } from '../assets/libs/math';
 
 const COUNT = 2500;
 const PARAMATERS = [
@@ -22,7 +21,7 @@ const PARAMATERS = [
         [ 0.80, 1, 0.5 ], 1
     ]
 ]
-export default function SunCorona( scene )
+export default function SunCorona( scene, AUDIOSOBJECT )
 {
     let particles = [ ];
     let materials = [ ];
@@ -52,7 +51,6 @@ export default function SunCorona( scene )
         scene.add( particles );
     }
 
-    const AUDIOSOBJECT = new AudioManager( )
     this.update = function( elapsedTime )
     {
         var time = elapsedTime

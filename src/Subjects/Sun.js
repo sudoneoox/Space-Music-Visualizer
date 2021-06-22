@@ -2,10 +2,9 @@ import * as THREE from 'three'
 import vertex from '../assets/libs/shaders/song/songVertex.glsl'
 import fragment from '../assets/libs/shaders/song/Songfragment.glsl'
 import { getAverageVolume, mapVolumeToNoiseStrength, } from '../assets/libs/math';
-import AudioManager from '../AudioManager';
 
 
-export default function Sun( scene, gui )
+export default function Sun( scene, gui, AUDIOSOBJECT )
 {
     const multiplier = {
         value: .25,
@@ -33,7 +32,8 @@ export default function Sun( scene, gui )
     mesh.scale.set( 10, 10, 10 )
     scene.add( mesh );
 
-    const AUDIOSOBJECT = new AudioManager( )
+    // const AUDIOSOBJECT = new AudioManager( )
+    // const AUDIOSOBJECT = 0;
 
     this.update = function( )
     {
