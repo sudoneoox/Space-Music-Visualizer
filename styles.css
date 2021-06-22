@@ -29,18 +29,25 @@ body {
     display: inline-block;
     text-decoration-color: black;
     margin-bottom: -50px;
+    padding-right: -100px;
+    background-color: transparent;
 }
 
 p {
     position: fixed;
-    bottom: 0;
+    bottom: .25%;
     left: 0;
-    text-decoration-color: white;
+    /* text-decoration-color: white; */
 }
 
 #top {
     color: white;
     position: fixed;
-    top: 93.5%;
+    top: 92%;
     left: 0;
+}
+
+.bottom {
+    color: red;
+    margin-right: 1px;
 }

@@ -68,7 +68,8 @@ export default function AudioManager( )
         texttochange.innerHTML = 'Press H for even more fun!'
         const fileinput = document.querySelector( '#filemp3' )
         fileinput.style.visibility = "hidden";
-        texttochange.style.top = "96.5%"
+        texttochange.style.top = "95.5%"
+        texttochange.style.color = "#ff00ff"
     }
 
     document.getElementById( 'filemp3' ).addEventListener( 'change', handleFileSelect, false );
