@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import { Float32BufferAttribute } from 'three';
-import { getRandomArbitrary } from '../assets/libs/math';
-import { getAverageVolume, } from '../assets/libs/math';
+import { getRandomArbitrary, getAverageVolume } from '../assets/libs/math';
 
 const COUNT = 2500;
 const PARAMATERS = [

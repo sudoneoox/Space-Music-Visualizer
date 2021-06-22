@@ -1,4 +1,5 @@
 import SceneManager from './SceneManager.js';
+import 'regenerator-runtime/runtime'
 
 
 const canvas = document.querySelector( '#webgl' )

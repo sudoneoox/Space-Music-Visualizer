@@ -19,6 +19,8 @@ import ny from './assets/textures/ny.jpg'
 import pz from './assets/textures/pz.jpg'
 import nz from './assets/textures/nz.jpg'
 import AudioManager from './AudioManager';
+import { getRandomInt } from './assets/libs/math';
+import { point } from 'cli-spinners';
 
 export default function SceneManager( canvas )
 {
@@ -57,6 +59,9 @@ export default function SceneManager( canvas )
             encoding: THREE.sRGBEncoding
         }
     );
+    const shuffleComposer = [ ];
+
+
     const composer = new EffectComposer( renderer, renderTarget );
     composer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) )
     composer.setSize( screenDimensions.width, screenDimensions.height )
@@ -79,7 +84,7 @@ export default function SceneManager( canvas )
     unrealBloomPass.radius = 0;
     unrealBloomPass.threshold = 0;
     unrealBloomPass.exposure = 1;
-    unrealBloomPass.enabled = true;
+    unrealBloomPass.enabled = false;
     composer.addPass( unrealBloomPass );
 
     const rgbShiftPass = new ShaderPass( RGBShiftShader );
@@ -92,6 +97,8 @@ export default function SceneManager( canvas )
     dotScreenpass.enabled = false;
     composer.addPass( dotScreenpass )
 
+    shuffleComposer.push( dotScreenpass, rgbShiftPass, unrealBloomPass, afterImage, glitchPass )
+
     // FPS panel
     const stats = new Stats( );
     document.body.appendChild( stats.dom );
@@ -99,10 +106,31 @@ export default function SceneManager( canvas )
     // GUI
     const gui = buildGui( );
 
-    // Audio Manager
+    // handles all the audio
     const audioManager = new AudioManager( );
     // Components the scene has to take care of
-    const sceneSubjects = createSceneSubjects( scene, gui, audioManager );
+    const sceneSubjects = createSceneSubjects( scene, gui, audioManager )
+
+    function composerMagic( composerArray )
+    {
+        const randomInt = getRandomInt( 0, composerArray.length - 1 );
+        composerArray[ randomInt ].enabled = true;
+    }
+
+    function disableCurrentComposer( )
+    {
+        for ( let i = 0; i < shuffleComposer.length; i++ )
+        {
+            shuffleComposer[ i ].enabled = false;
+        }
+    }
+
+    window.setInterval( ( ) =>
+    {
+        disableCurrentComposer( )
+        composerMagic( shuffleComposer )
+
+    }, 5000 )
 
     function buildGui( )
     {
@@ -146,8 +174,8 @@ export default function SceneManager( canvas )
         const scene = new THREE.Scene( );
 
         const cubeTextureLoader = new THREE.CubeTextureLoader( )
-        const environmentMap = cubeTextureLoader.load( [ px, nx, py, ny, pz, nz ],
-            ( ) => console.log( 'worked' ), ( ) => console.log( 'working on it' ), ( e ) => console.log( 'error', e ) )
+        const environmentMap = cubeTextureLoader.load( [ px, nx, py, ny, pz, nz ] )
+        // ( ) => console.log( 'worked' ), ( ) => console.log( 'working on it' ), ( e ) => console.log( 'error', e ) )
 
         environmentMap.encoding = THREE.sRGBEncoding;
         scene.background = environmentMap
@@ -193,7 +221,6 @@ export default function SceneManager( canvas )
     {
         stats.begin( );
         const elapsedTime = clock.getElapsedTime( );
-
         for ( let i = 0; i < sceneSubjects.length; i++ )
         {
             sceneSubjects[ i ].update( elapsedTime );
@@ -201,7 +228,7 @@ export default function SceneManager( canvas )
         camera.position.x += Math.sin( elapsedTime ) * 4;
         camera.position.z += Math.cos( elapsedTime ) * 4;
         controls.update( )
-        if ( rgbShiftPass.enabled == true )
+        if ( rgbShiftPass.enabled )
         {
             rgbShiftPass.uniforms.angle.value = elapsedTime * .3;
         }
